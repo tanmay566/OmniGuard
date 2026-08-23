@@ -1,0 +1,11 @@
+ultralytics
+opencv-python-headless
+numpy
+requests
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+websockets
+anthropic
+python-dotenv
