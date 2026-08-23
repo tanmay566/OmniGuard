@@ -25,7 +25,7 @@ human always in the loop.
 
 ## Tech stack
 
-Python, OpenCV, Ultralytics YOLOv8/11, FastAPI, SQLite, WebSocket, Anthropic API
+Python, OpenCV, Ultralytics YOLOv8/11, FastAPI, SQLAlchemy, WebSocket, Anthropic API
 (tool-use), HTML/JS or React.
 
 ## Quick start
