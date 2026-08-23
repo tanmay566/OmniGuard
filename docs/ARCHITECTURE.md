@@ -40,7 +40,7 @@ Runs as a single continuous Python process reading video frames locally. No netw
 dependency except the final incident POST call. See `docs/PERCEPTION_GUIDE.md`.
 
 ### Backend
-FastAPI app with SQLite (Postgres-ready), exposing incident ingestion, operator action
+FastAPI app with SQLAlchemy (Postgres-ready), exposing incident ingestion, operator action
 endpoints, and a WebSocket for live dashboard updates. See `docs/API.md` and
 `docs/BACKEND_SCHEMA_GUIDE.md`.
 
