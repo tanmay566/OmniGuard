@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Sentinel · Safety Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              navy: '#0a0e17',
+              'navy-light': '#111927',
+              'slate-dark': '#1a2332',
+              'slate-mid': '#243044',
+              'cyan-accent': '#00d4ff',
+              'cyan-dim': 'rgba(0, 212, 255, 0.08)',
+              'red-alert': '#ff1744',
+              'orange-alert': '#ff9100',
+              'yellow-alert': '#ffea00',
+              'green-ok': '#00e676',
+              'blue-info': '#2979ff',
+            },
+            fontFamily: {
+              mono: ['"JetBrains Mono"', 'monospace'],
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            boxShadow: {
+              glow: '0 0 30px rgba(0, 212, 255, 0.08)',
+              'glow-strong': '0 0 50px rgba(0, 212, 255, 0.12)',
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'scan': 'scan 4s linear infinite',
+              'blink': 'blink 1.2s step-end infinite',
+              'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+              'slide-up': 'slideUp 0.3s ease-out',
+              'fade-in': 'fadeIn 0.25s ease-out',
+            },
+            keyframes: {
+              scan: {
+                '0%': { transform: 'translateY(0)' },
+                '100%': { transform: 'translateY(100%)' },
+              },
+              blink: {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0 },
+              },
+              glowPulse: {
+                '0%, 100%': { opacity: 0.6 },
+                '50%': { opacity: 1 },
+              },
+              slideUp: {
+                '0%': { opacity: 0, transform: 'translateY(12px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+            },
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0a0e17;
+        color: #e8edf5;
+        font-family: 'Inter', system-ui, sans-serif;
+        overflow-x: hidden;
+      }
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0a0e17;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #243044;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #00d4ff44;
+      }
+      .glass-panel {
+        background: rgba(17, 25, 39, 0.85);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .glass-panel-light {
+        background: rgba(26, 35, 50, 0.7);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .cctv-frame {
+        background: #060a12;
+        border: 1px solid rgba(0, 212, 255, 0.12);
+        box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.6);
+      }
+      .scan-line {
+        background: linear-gradient(to bottom, transparent 0%, rgba(0, 212, 255, 0.02) 50%, transparent 100%);
+        pointer-events: none;
+        animation: scan 4s linear infinite;
+      }
+      .severity-critical {
+        border-left: 3px solid #ff1744;
+        background: rgba(255, 23, 68, 0.06);
+      }
+      .severity-high {
+        border-left: 3px solid #ff9100;
+        background: rgba(255, 145, 0, 0.05);
+      }
+      .severity-medium {
+        border-left: 3px solid #ffea00;
+        background: rgba(255, 234, 0, 0.04);
+      }
+      .severity-low {
+        border-left: 3px solid #2979ff;
+        background: rgba(41, 121, 255, 0.04);
+      }
+      .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+      .status-dot.online {
+        background: #00e676;
+        box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
+        animation: glowPulse 2s ease-in-out infinite;
+      }
+      .status-dot.warning {
+        background: #ffea00;
+        box-shadow: 0 0 12px rgba(255, 234, 0, 0.3);
+        animation: glowPulse 1.5s ease-in-out infinite;
+      }
+      .status-dot.offline {
+        background: #ff1744;
+        box-shadow: 0 0 12px rgba(255, 23, 68, 0.3);
+      }
+      .badge-glow {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
+      }
+      .transition-all {
+        transition: all 0.2s ease;
+      }
+      .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      }
+      .map-pin {
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .map-pin:hover {
+        transform: scale(1.25);
+        filter: brightness(1.4);
+      }
+      .incident-card {
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+      .incident-card:hover {
+        background: rgba(0, 212, 255, 0.04);
+        border-color: rgba(0, 212, 255, 0.15);
+      }
+      .occupancy-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: #1a2332;
+        overflow: hidden;
+      }
+      .occupancy-bar .fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.6s ease;
+      }
+      .blink-live {
+        animation: blink 1.2s step-end infinite;
+        color: #ff1744;
+      }
+      .nav-link {
+        transition: all 0.15s ease;
+        cursor: pointer;
+      }
+      .nav-link:hover {
+        color: #00d4ff;
+        background: rgba(0, 212, 255, 0.04);
+      }
+      .nav-link.active {
+        color: #00d4ff;
+        background: rgba(0, 212, 255, 0.08);
+        border-right: 2px solid #00d4ff;
+      }
+      .btn-operator {
+        transition: all 0.15s ease;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .btn-operator:hover {
+        transform: scale(1.02);
+      }
+      .btn-operator:active {
+        transform: scale(0.97);
+      }
+      .toast-enter {
+        animation: slideUp 0.3s ease-out forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Use React from CDN for simplicity, but we'll write JSX with Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script type="text/babel">
+      // ============================================================
+      // 1. MOCK DATA & STATE
+      // ============================================================
+
+      const ZONES = [
+        { id: 'main-gate', name: 'Main Gate', occupancy: 42, capacity: 60, lat: 40, lng: 50 },
+        { id: 'gate-3', name: 'Gate 3', occupancy: 18, capacity: 40, lat: 55, lng: 42 },
+        { id: 'robotics-lab', name: 'Robotics Lab', occupancy: 18, capacity: 30, lat: 65, lng: 65 },
+        { id: 'cafeteria', name: 'Cafeteria', occupancy: 87, capacity: 100, lat: 30, lng: 70 },
+        { id: 'library', name: 'Library', occupancy: 36, capacity: 120, lat: 45, lng: 85 },
+        { id: 'parking', name: 'Parking', occupancy: 23, capacity: 80, lat: 20, lng: 30 },
+        { id: 'academic-block', name: 'Academic Block', occupancy: 64, capacity: 90, lat: 50, lng: 25 },
+      ]
+
+      const CAMERAS = [
+        { id: 'cam-01', zone: 'Main Gate', label: 'CAM-01 • MAIN GATE' },
+        { id: 'cam-02', zone: 'Gate 3', label: 'CAM-03 • GATE 3' },
+        { id: 'cam-03', zone: 'Robotics Lab', label: 'CAM-07 • ROBOTICS LAB' },
+        { id: 'cam-04', zone: 'Cafeteria', label: 'CAM-12 • CAFETERIA' },
+      ]
+
+      let incidentCounter = 100
+      let eventCounter = 0
+
+      const generateId = () => {
+        incidentCounter += 1
+        return `inc_${String(incidentCounter).padStart(4, '0')}`
+      }
+
+      const generateEventId = () => {
+        eventCounter += 1
+        return `evt_${String(eventCounter).padStart(4, '0')}`
+      }
+
+      const SEVERITIES = ['critical', 'high', 'medium', 'low']
+      const SEVERITY_LABELS = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }
+      const SEVERITY_COLORS = {
+        critical: '#ff1744',
+        high: '#ff9100',
+        medium: '#ffea00',
+        low: '#2979ff',
+      }
+      const INCIDENT_TYPES = [
+        'unattended_baggage',
+        'restricted_intrusion',
+        'crowd_density',
+        'fire_smoke',
+        'unusual_occupancy',
+      ]
+      const INCIDENT_LABELS = {
+        unattended_baggage: 'Unattended Baggage',
+        restricted_intrusion: 'Restricted Zone Intrusion',
+        crowd_density: 'Crowd Density Threshold',
+        fire_smoke: 'Fire / Smoke Detected',
+        unusual_occupancy: 'Unusual Occupancy',
+      }
+
+      const mockIncidents = []
+
+      // Seed initial incidents
+      const seedIncidents = () => {
+        const baseTime = Date.now() - 120000
+        const templates = [
+          {
+            type: 'unattended_baggage',
+            zone: 'Gate 3',
+            tracked_object_id: 47,
+            dwell_time_seconds: 32,
+            detection_confidence: 0.89,
+            severity: 'high',
+            status: 'unacknowledged',
+            correlated_incident_ids: ['inc_0088'],
+            reasoning_summary:
+              'Bag #47 remained stationary for 32 seconds with no person detected nearby. A related movement event involving the same tracked subject occurred shortly afterward, increasing the likelihood of a coordinated incident.',
+            recommended_action: 'dispatch_security',
+            notification_draft:
+              'Security team requested at Gate 3. Unattended baggage associated with recent movement event detected.',
+          },
+          {
+            type: 'restricted_intrusion',
+            zone: 'Robotics Lab',
+            tracked_object_id: 23,
+            dwell_time_seconds: null,
+            detection_confidence: 0.94,
+            severity: 'critical',
+            status: 'unacknowledged',
+            correlated_incident_ids: [],
+            reasoning_summary:
+              'Person #23 entered the Robotics Lab restricted zone via the north access point. This area is designated as high-security and requires immediate attention.',
+            recommended_action: 'dispatch_security',
+            notification_draft: 'Unauthorized access detected in Robotics Lab. Security team dispatched.',
+          },
+          {
+            type: 'crowd_density',
+            zone: 'Main Gate',
+            tracked_object_id: null,
+            dwell_time_seconds: null,
+            detection_confidence: 0.78,
+            severity: 'medium',
+            status: 'acknowledged',
+            correlated_incident_ids: [],
+            reasoning_summary:
+              'Main Gate occupancy reached 42 people, exceeding the 60% threshold. Crowd flow patterns suggest a surge in foot traffic.',
+            recommended_action: 'monitor',
+            notification_draft: 'Main Gate experiencing elevated foot traffic. Continue monitoring.',
+          },
+          {
+            type: 'unusual_occupancy',
+            zone: 'Cafeteria',
+            tracked_object_id: null,
+            dwell_time_seconds: null,
+            detection_confidence: 0.62,
+            severity: 'low',
+            status: 'unacknowledged',
+            correlated_incident_ids: [],
+            reasoning_summary:
+              'Cafeteria occupancy is 87 people, which is within normal range but trending upward. No immediate action required.',
+            recommended_action: 'monitor',
+            notification_draft: 'Cafeteria occupancy trending upward. Routine monitoring advised.',
+          },
+          {
+            type: 'fire_smoke',
+            zone: 'Academic Block',
+            tracked_object_id: null,
+            dwell_time_seconds: null,
+            detection_confidence: 0.91,
+            severity: 'critical',
+            status: 'unacknowledged',
+            correlated_incident_ids: [],
+            reasoning_summary:
+              'Fire/smoke detection triggered in Academic Block corridor C. Immediate evacuation and emergency response required.',
+            recommended_action: 'evacuate',
+            notification_draft: '⚠️ FIRE ALERT: Academic Block. Evacuate immediately. Emergency services notified.',
+          },
+        ]
+
+        templates.forEach((t, i) => {
+          const ts = baseTime + i * 8000
+          mockIncidents.push({
+            incident_id: generateId(),
+            ...t,
+            timestamp: new Date(ts).toISOString(),
+            created_at: new Date(ts).toISOString(),
+            updated_at: new Date(ts + 2000).toISOString(),
+            ai_processed: true,
+            ai_processed_at: new Date(ts + 3000).toISOString(),
+            human_override: null,
+            false_positive: false,
+          })
+        })
+
+        // Add one acknowledged incident with override
+        mockIncidents[0].status = 'acknowledged'
+        mockIncidents[0].human_override = { severity: 'high', by: 'operator', at: new Date(Date.now() - 30000).toISOString() }
+      }
+
+      seedIncidents()
+
+      // ============================================================
+      // 2. MOCK REALTIME ENGINE
+      // ============================================================
+
+      const mockRealtime = {
+        listeners: [],
+        timer: null,
+        running: false,
+
+        subscribe(callback) {
+          this.listeners.push(callback)
+          if (!this.running) this.start()
+          return () => {
+            this.listeners = this.listeners.filter((l) => l !== callback)
+            if (this.listeners.length === 0) this.stop()
+          }
+        },
+
+        start() {
+          if (this.running) return
+          this.running = true
+          this.timer = setInterval(() => {
+            this.emit()
+          }, 4000)
+        },
+
+        stop() {
+          this.running = false
+          if (this.timer) {
+            clearInterval(this.timer)
+            this.timer = null
+          }
+        },
+
+        emit() {
+          const event = this.generateEvent()
+          this.listeners.forEach((cb) => cb(event))
+        },
+
+        generateEvent() {
+          const types = ['incident_new', 'incident_update', 'occupancy_update', 'activity_log']
+          const type = types[Math.floor(Math.random() * types.length)]
+
+          if (type === 'incident_new') {
+            const zone = ZONES[Math.floor(Math.random() * ZONES.length)]
+            const typeIdx = Math.floor(Math.random() * INCIDENT_TYPES.length)
+            const typeKey = INCIDENT_TYPES[typeIdx]
+            const sevIdx = Math.floor(Math.random() * 3) + 1 // low, medium, high
+            const severity = ['low', 'medium', 'high', 'critical'][sevIdx]
+            const trackedId = Math.floor(Math.random() * 80) + 10
+
+            const incident = {
+              incident_id: generateId(),
+              type: typeKey,
+              zone: zone.name,
+              tracked_object_id: trackedId,
+              dwell_time_seconds: typeKey === 'unattended_baggage' ? Math.floor(Math.random() * 45) + 10 : null,
+              detection_confidence: 0.75 + Math.random() * 0.2,
+              severity: severity,
+              status: 'unacknowledged',
+              correlated_incident_ids: [],
+              reasoning_summary:
+                `Automated detection flagged ${INCIDENT_LABELS[typeKey].toLowerCase()} in ${zone.name}. ` +
+                `Confidence ${Math.round((0.75 + Math.random() * 0.2) * 100)}%.`,
+              recommended_action: severity === 'critical' || severity === 'high' ? 'dispatch_security' : 'monitor',
+              notification_draft: `${INCIDENT_LABELS[typeKey]} detected at ${zone.name}. ${
+                severity === 'critical' ? 'Immediate attention required.' : 'Monitor situation.'
+              }`,
+              timestamp: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              ai_processed: true,
+              ai_processed_at: new Date(Date.now() + 1000).toISOString(),
+              human_override: null,
+              false_positive: false,
+            }
+
+            mockIncidents.unshift(incident)
+
+            return {
+              type: 'incident_new',
+              data: incident,
+              log: `${new Date().toLocaleTimeString()} · ${INCIDENT_LABELS[typeKey]} detected at ${zone.name}`,
+            }
+          }
+
+          if (type === 'incident_update') {
+            const unack = mockIncidents.filter((i) => i.status === 'unacknowledged')
+            if (unack.length === 0) {
+              return { type: 'activity_log', log: `${new Date().toLocaleTimeString()} · System check: all clear` }
+            }
+            const inc = unack[Math.floor(Math.random() * unack.length)]
+            const oldSev = inc.severity
+            const sevIdx = ['low', 'medium', 'high', 'critical'].indexOf(oldSev)
+            if (sevIdx < 2) {
+              const newSev = ['low', 'medium', 'high', 'critical'][sevIdx + 1]
+              inc.severity = newSev
+              inc.updated_at = new Date().toISOString()
+              inc.recommended_action = newSev === 'critical' || newSev === 'high' ? 'dispatch_security' : 'monitor'
+              return {
+                type: 'incident_update',
+                data: inc,
+                log: `${new Date().toLocaleTimeString()} · ${INCIDENT_LABELS[inc.type]} severity escalated from ${oldSev.toUpperCase()} → ${newSev.toUpperCase()}`,
+              }
+            }
+            return { type: 'activity_log', log: `${new Date().toLocaleTimeString()} · No updates available` }
+          }
+
+          if (type === 'occupancy_update') {
+            const zone = ZONES[Math.floor(Math.random() * ZONES.length)]
+            const delta = Math.floor(Math.random() * 10) - 4
+            zone.occupancy = Math.max(0, Math.min(zone.capacity, zone.occupancy + delta))
+            return {
+              type: 'occupancy_update',
+              data: { zoneId: zone.id, occupancy: zone.occupancy, capacity: zone.capacity },
+              log: `${new Date().toLocaleTimeString()} · ${zone.name} occupancy ${delta >= 0 ? '+' : ''}${delta} → ${zone.occupancy}`,
+            }
+          }
+
+          return {
+            type: 'activity_log',
+            log: `${new Date().toLocaleTimeString()} · System heartbeat: all services operational`,
+          }
+        },
+      }
+
+      // ============================================================
+      // 3. HELPER FUNCTIONS
+      // ============================================================
+
+      const formatTime = (iso) => {
+        const d = new Date(iso)
+        return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      }
+
+      const formatDate = (iso) => {
+        const d = new Date(iso)
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
+
+      const getSeverityColor = (sev) => SEVERITY_COLORS[sev] || '#888'
+      const getSeverityLabel = (sev) => SEVERITY_LABELS[sev] || sev.toUpperCase()
+
+      const getZoneById = (id) => ZONES.find((z) => z.id === id)
+
+      const getOccupancyPercent = (zone) => Math.round((zone.occupancy / zone.capacity) * 100)
+
+      const getOccupancyColor = (zone) => {
+        const pct = getOccupancyPercent(zone)
+        if (pct >= 85) return '#ff1744'
+        if (pct >= 70) return '#ff9100'
+        if (pct >= 50) return '#ffea00'
+        return '#00e676'
+      }
+
+      const getIncidentIcon = (type) => {
+        const map = {
+          unattended_baggage: 'luggage',
+          restricted_intrusion: 'shield-alert',
+          crowd_density: 'users',
+          fire_smoke: 'flame',
+          unusual_occupancy: 'building-2',
+        }
+        return map[type] || 'alert-circle'
+      }
+
+      // ============================================================
+      // 4. REACT COMPONENTS
+      // ============================================================
+
+      const { useState, useEffect, useRef, useCallback, useMemo, createContext, useContext } = React
+
+      // --- Context ---
+      const AppContext = createContext()
+
+      const useApp = () => useContext(AppContext)
+
+      // --- Toast system ---
+      const ToastContext = createContext()
+      const useToast = () => useContext(ToastContext)
+
+      const ToastProvider = ({ children }) => {
+        const [toasts, setToasts] = useState([])
+
+        const addToast = useCallback((message, type = 'info', duration = 4000) => {
+          const id = Date.now() + Math.random()
+          setToasts((prev) => [...prev, { id, message, type, duration }])
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id))
+          }, duration)
+        }, [])
+
+        return (
+          <ToastContext.Provider value={{ addToast }}>
+            {children}
+            <div className="fixed bottom-6 right-6 z-50 space-y-2 max-w-sm">
+              {toasts.map((toast) => (
+                <div
+                  key={toast.id}
+                  className="glass-panel px-4 py-3 rounded-lg border border-white/5 shadow-glow toast-enter text-sm flex items-center gap-2"
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{
+                      background:
+                        toast.type === 'success' ? '#00e676' :
+                        toast.type === 'error' ? '#ff1744' :
+                        toast.type === 'warning' ? '#ff9100' : '#00d4ff',
+                    }}
+                  />
+                  <span>{toast.message}</span>
+                </div>
+              ))}
+            </div>
+          </ToastContext.Provider>
+        )
+      }
+
+      // --- Icon helper ---
+      // Lucide's createElement() expects an IconNode, not the icon name string.
+      // The old code passed `name` directly, which caused:
+      // "TypeError: d.forEach is not a function".
+      const Icon = ({ name, size = 18, className = '', ...props }) => {
+        const [Svg, setSvg] = useState(null)
+
+        useEffect(() => {
+          if (!window.lucide || !window.lucide.icons) return
+
+          const pascalName = String(name || '')
+            .split('-')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join('')
+
+          const iconNode = window.lucide.icons[pascalName]
+          if (!iconNode || !window.lucide.createElement) return
+
+          try {
+            const icon = window.lucide.createElement(iconNode)
+            if (!icon) return
+
+            icon.setAttribute('width', String(size))
+            icon.setAttribute('height', String(size))
+            if (className) icon.setAttribute('class', className)
+
+            Object.entries(props).forEach(([k, v]) => {
+              if (v !== undefined && v !== null && typeof v !== 'object') {
+                icon.setAttribute(k, String(v))
+              }
+            })
+
+            setSvg(icon.outerHTML)
+          } catch (error) {
+            console.warn(`Unable to render Lucide icon "${name}"`, error)
+            setSvg(null)
+          }
+        }, [name, size, className, JSON.stringify(props)])
+
+        if (!Svg) {
+          return (
+            <span
+              className={`inline-flex items-center justify-center ${className}`}
+              style={{ width: size, height: size }}
+              aria-hidden="true"
+            />
+          )
+        }
+
+        return <span dangerouslySetInnerHTML={{ __html: Svg }} />
+      }
+
+      // --- Navbar ---
+      const Navbar = () => {
+        const [time, setTime] = useState(new Date())
+        const [date, setDate] = useState(new Date())
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            const now = new Date()
+            setTime(now)
+            setDate(now)
+          }, 1000)
+          return () => clearInterval(interval)
+        }, [])
+
+        return (
+          <header className="h-16 px-5 flex items-center justify-between border-b border-white/5 bg-navy/90 backdrop-blur-sm fixed top-0 left-0 right-0 z-40">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-cyan-accent/10 border border-cyan-accent/20 flex items-center justify-center">
+                <Icon name="shield" size={20} className="text-cyan-accent" />
+              </div>
+              <div>
+                <div className="text-base font-bold tracking-tight text-white leading-tight">CAMPUS SENTINEL</div>
+                <div className="text-[10px] font-medium text-cyan-accent/70 tracking-wider uppercase">
+                  Agentic Campus Safety Intelligence
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden md:flex items-center gap-6">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="status-dot online" />
+                <span className="text-gray-300 font-medium">ALL SYSTEMS OPERATIONAL</span>
+              </div>
+              <div className="text-sm text-gray-400 font-mono">
+                {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+              <div className="text-sm text-gray-400">
+                {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+              <div className="flex items-center gap-1 text-sm font-mono text-red-alert">
+                <span className="blink-live text-xs">●</span>
+                <span className="text-red-alert/80 font-semibold tracking-wider">LIVE</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                <Icon name="bell" size={18} />
+              </button>
+              <button className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                <Icon name="settings" size={18} />
+              </button>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-accent/20 to-cyan-accent/5 border border-cyan-accent/20 flex items-center justify-center text-xs font-bold text-cyan-accent">
+                OP
+              </div>
+            </div>
+          </header>
+        )
+      }
+
+      // --- Sidebar ---
+      const Sidebar = ({ activePage, setActivePage }) => {
+        const navItems = [
+          { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
+          { id: 'surveillance', label: 'Live Surveillance', icon: 'cctv' },
+          { id: 'incidents', label: 'Incidents', icon: 'alert-triangle' },
+          { id: 'map', label: 'Campus Map', icon: 'map' },
+          { id: 'analytics', label: 'Analytics', icon: 'chart-bar' },
+          { id: 'health', label: 'System Health', icon: 'activity' },
+        ]
+
+        return (
+          <aside className="w-56 h-screen fixed left-0 top-16 bottom-0 bg-navy/95 border-r border-white/5 flex flex-col z-30">
+            <nav className="flex-1 pt-4 px-3 space-y-0.5">
+              {navItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
+                    activePage === item.id
+                      ? 'active text-cyan-accent bg-cyan-dim border-r-2 border-cyan-accent'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  onClick={() => setActivePage(item.id)}
+                >
+                  <Icon name={item.icon} size={18} />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </nav>
+
+            <div className="p-4 border-t border-white/5">
+              <div className="glass-panel-light rounded-lg p-3">
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Operator Mode</div>
+                <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+                  <span className="status-dot online" />
+                  Human Oversight: ENABLED
+                </div>
+              </div>
+            </div>
+          </aside>
+        )
+      }
+
+      // --- Stat Card ---
+      const StatCard = ({ label, value, icon, trend, trendLabel, color = 'cyan-accent', subValue }) => {
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5 hover:border-white/10 transition-all hover-lift">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">{label}</div>
+                <div className="text-2xl font-bold mt-1 tracking-tight" style={{ color: color || '#fff' }}>
+                  {value}
+                </div>
+                {subValue && <div className="text-xs text-gray-500 mt-0.5">{subValue}</div>}
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center" style={{ color: color || '#888' }}>
+                <Icon name={icon} size={20} />
+              </div>
+            </div>
+            {trend && (
+              <div className="flex items-center gap-1.5 mt-2 text-xs">
+                <span className={trend > 0 ? 'text-green-400' : 'text-red-400'}>
+                  {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+                </span>
+                <span className="text-gray-500">{trendLabel || 'vs prior'}</span>
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      // --- CCTV Feed ---
+      const CCTVFeed = ({ zone = 'Gate 3' }) => {
+        const [objects, setObjects] = useState([
+          { id: 47, type: 'Person', confidence: 98, x: 35, y: 45, w: 12, h: 25, label: 'Person #47' },
+          { id: 42, type: 'Person', confidence: 94, x: 62, y: 52, w: 10, h: 22, label: 'Person #42' },
+          { id: 39, type: 'Person', confidence: 91, x: 18, y: 38, w: 11, h: 24, label: 'Person #39' },
+          { id: 47, type: 'Bag', confidence: 89, x: 52, y: 68, w: 8, h: 10, label: 'Bag #47' },
+          { id: 33, type: 'Bag', confidence: 82, x: 28, y: 72, w: 7, h: 9, label: 'Bag #33' },
+        ])
+
+        const [time, setTime] = useState(new Date())
+
+        useEffect(() => {
+          const interval = setInterval(() => setTime(new Date()), 1000)
+          return () => clearInterval(interval)
+        }, [])
+
+        // Simulate object movement
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setObjects((prev) =>
+              prev.map((obj) => ({
+                ...obj,
+                x: Math.max(2, Math.min(90, obj.x + (Math.random() - 0.5) * 0.8)),
+                y: Math.max(2, Math.min(90, obj.y + (Math.random() - 0.5) * 0.6)),
+              }))
+            )
+          }, 1500)
+          return () => clearInterval(interval)
+        }, [])
+
+        return (
+          <div className="cctv-frame rounded-xl overflow-hidden relative bg-black/90 aspect-video">
+            {/* Placeholder grid / scan lines */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+              <div className="w-full h-full" style={{
+                backgroundImage: 'linear-gradient(rgba(0,212,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.05) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
+              }} />
+            </div>
+
+            {/* Scan line effect */}
+            <div className="scan-line absolute inset-0 pointer-events-none" />
+
+            {/* Camera overlay */}
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-2 text-xs font-mono bg-black/60 px-2.5 py-1 rounded border border-white/5">
+              <span className="text-cyan-accent">●</span>
+              <span className="text-gray-300">{zone === 'Gate 3' ? 'CAM-03 • GATE 3' : 'CAM-01 • MAIN GATE'}</span>
+            </div>
+
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-2 text-xs font-mono bg-black/60 px-2.5 py-1 rounded border border-white/5">
+              <span className="text-red-alert blink-live text-[10px]">●</span>
+              <span className="text-gray-400">LIVE</span>
+            </div>
+
+            {/* Objects with bounding boxes */}
+            {objects.map((obj) => (
+              <div
+                key={`${obj.id}-${obj.type}`}
+                className="absolute border-2 border-cyan-accent/70 rounded pointer-events-none"
+                style={{
+                  left: `${obj.x}%`,
+                  top: `${obj.y}%`,
+                  width: `${obj.w}%`,
+                  height: `${obj.h}%`,
+                  boxShadow: '0 0 20px rgba(0,212,255,0.15)',
+                  animation: 'glowPulse 2.5s ease-in-out infinite',
+                }}
+              >
+                <div className="absolute -top-6 left-0 text-[9px] font-mono font-bold bg-black/80 px-1.5 py-0.5 rounded border border-cyan-accent/30 whitespace-nowrap text-cyan-accent">
+                  {obj.type} {obj.confidence}%
+                </div>
+                <div className="absolute -bottom-5 left-0 text-[8px] font-mono text-gray-400 bg-black/60 px-1 py-0.5 rounded">
+                  ID#{obj.id}
+                </div>
+              </div>
+            ))}
+
+            {/* Bottom overlay */}
+            <div className="absolute bottom-3 left-3 right-3 z-10 flex justify-between text-[11px] font-mono text-gray-400 bg-black/60 px-3 py-1.5 rounded border border-white/5">
+              <span>{time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              <span>FPS: 24</span>
+              <span>Objects: {objects.length}</span>
+              <span className="text-cyan-accent/60">● REC</span>
+            </div>
+
+            {/* Center crosshair */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-10">
+              <div className="w-12 h-12 border border-white/20 rounded-full" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-8 bg-white/20" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-0.5 bg-white/20" />
+            </div>
+          </div>
+        )
+      }
+
+      // --- Incident Card ---
+      const IncidentCard = ({ incident, onClick, selected }) => {
+        const severity = incident.severity
+        const label = INCIDENT_LABELS[incident.type] || incident.type
+        const icon = getIncidentIcon(incident.type)
+
+        const sevClass = {
+          critical: 'severity-critical',
+          high: 'severity-high',
+          medium: 'severity-medium',
+          low: 'severity-low',
+        }[severity] || ''
+
+        const statusColor = incident.status === 'acknowledged' ? '#00e676' : '#ffea00'
+        const statusLabel = incident.status === 'acknowledged' ? 'ACKNOWLEDGED' : 'UNACKNOWLEDGED'
+
+        return (
+          <div
+            className={`incident-card glass-panel-light rounded-lg p-3 border border-white/5 ${sevClass} ${selected ? 'border-cyan-accent/30 shadow-glow' : ''}`}
+            onClick={() => onClick && onClick(incident)}
+          >
+            <div className="flex items-start gap-2.5">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: `${getSeverityColor(severity)}22`, color: getSeverityColor(severity) }}>
+                <Icon name={icon} size={14} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: getSeverityColor(severity) }}>
+                    {getSeverityLabel(severity)}
+                  </span>
+                  <span className="text-xs font-semibold text-white">{label}</span>
+                  <span className="text-[10px] text-gray-500 font-mono ml-auto">{incident.incident_id}</span>
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
+                  <span>{incident.zone}</span>
+                  <span>•</span>
+                  <span className="font-mono">{formatTime(incident.timestamp)}</span>
+                  {incident.tracked_object_id && (
+                    <>
+                      <span>•</span>
+                      <span className="text-cyan-accent/70">ID#{incident.tracked_object_id}</span>
+                    </>
+                  )}
+                </div>
+                {incident.dwell_time_seconds && (
+                  <div className="text-[11px] text-gray-500 mt-0.5">Stationary {incident.dwell_time_seconds}s</div>
+                )}
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-[10px] flex items-center gap-1">
+                    <span className="status-dot" style={{ background: statusColor }} />
+                    <span className="text-gray-400">{statusLabel}</span>
+                  </span>
+                  {incident.false_positive && (
+                    <span className="text-[10px] text-red-400/70">● FALSE POSITIVE</span>
+                  )}
+                  {incident.human_override && (
+                    <span className="text-[10px] text-cyan-accent/60">● OVERRIDE</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- Incident Detail Panel ---
+      const IncidentDetail = ({ incident, onClose, onAcknowledge, onOverride, onFalsePositive, onEscalate }) => {
+        if (!incident) return null
+
+        const label = INCIDENT_LABELS[incident.type] || incident.type
+        const icon = getIncidentIcon(incident.type)
+
+        return (
+          <div className="glass-panel rounded-xl border border-white/10 p-5 max-h-[600px] overflow-y-auto">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+                  <span>{incident.incident_id}</span>
+                  <span>•</span>
+                  <span>{formatTime(incident.timestamp)}</span>
+                </div>
+                <div className="flex items-center gap-3 mt-1">
+                  <h3 className="text-lg font-bold text-white">{label}</h3>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+                    style={{ background: `${getSeverityColor(incident.severity)}22`, color: getSeverityColor(incident.severity) }}
+                  >
+                    {getSeverityLabel(incident.severity)}
+                  </span>
+                </div>
+              </div>
+              <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wider">Zone</div>
+                <div className="font-medium">{incident.zone}</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wider">Tracking ID</div>
+                <div className="font-mono text-cyan-accent">
+                  {incident.tracked_object_id ? `Object #${incident.tracked_object_id}` : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wider">Confidence</div>
+                <div>{Math.round(incident.detection_confidence * 100)}%</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs uppercase tracking-wider">Dwell Time</div>
+                <div>{incident.dwell_time_seconds ? `${incident.dwell_time_seconds}s` : '—'}</div>
+              </div>
+            </div>
+
+            {/* AI Analysis */}
+            <div className="bg-cyan-dim rounded-lg p-4 border border-cyan-accent/10 mb-4">
+              <div className="flex items-center gap-2 text-xs text-cyan-accent/80 uppercase tracking-wider font-semibold mb-2">
+                <Icon name="brain" size={14} />
+                AI TRIAGE ANALYSIS
+                <span className="ml-auto text-[10px] bg-cyan-accent/10 px-2 py-0.5 rounded text-cyan-accent/60">
+                  COMPLETE
+                </span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-gray-400">Severity: </span>
+                  <span className="font-bold" style={{ color: getSeverityColor(incident.severity) }}>
+                    {getSeverityLabel(incident.severity)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Reasoning: </span>
+                  <span className="text-gray-300">{incident.reasoning_summary}</span>
+                </div>
+                {incident.correlated_incident_ids && incident.correlated_incident_ids.length > 0 && (
+                  <div>
+                    <span className="text-gray-400">Correlated: </span>
+                    {incident.correlated_incident_ids.map((id) => (
+                      <span key={id} className="inline-block bg-white/5 px-2 py-0.5 rounded text-xs font-mono text-cyan-accent/70 mr-1">
+                        {id}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-400">Recommended: </span>
+                  <span className="font-medium text-cyan-accent">
+                    {incident.recommended_action?.toUpperCase().replace('_', ' ')}
+                  </span>
+                </div>
+                {incident.notification_draft && (
+                  <div className="bg-black/30 rounded p-2 text-xs text-gray-400 font-mono border border-white/5 mt-1">
+                    <span className="text-gray-500">📋 </span>
+                    {incident.notification_draft}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Human Oversight Controls */}
+            <div className="border-t border-white/5 pt-4">
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-3">Human Oversight</div>
+              <div className="flex flex-wrap gap-2">
+                {incident.status !== 'acknowledged' && (
+                  <button
+                    onClick={() => onAcknowledge && onAcknowledge(incident)}
+                    className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20"
+                  >
+                    <Icon name="check" size={14} className="inline mr-1.5" />
+                    Acknowledge
+                  </button>
+                )}
+                <button
+                  onClick={() => onOverride && onOverride(incident)}
+                  className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20"
+                >
+                  <Icon name="pencil" size={14} className="inline mr-1.5" />
+                  Override Severity
+                </button>
+                <button
+                  onClick={() => onFalsePositive && onFalsePositive(incident)}
+                  className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
+                >
+                  <Icon name="x" size={14} className="inline mr-1.5" />
+                  False Positive
+                </button>
+                <button
+                  onClick={() => onEscalate && onEscalate(incident)}
+                  className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                >
+                  <Icon name="alert-triangle" size={14} className="inline mr-1.5" />
+                  Escalate
+                </button>
+              </div>
+              <div className="mt-3 text-[11px] text-gray-500 flex items-center gap-2 border border-white/5 rounded-lg px-3 py-1.5 bg-black/20">
+                <Icon name="info" size={12} />
+                AI recommends. Human decides. Operator oversight required before operational escalation.
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- Campus Map (SVG-based) ---
+      const CampusMap = ({ onZoneClick }) => {
+        const [selectedZone, setSelectedZone] = useState(null)
+
+        const handleZoneClick = (zone) => {
+          setSelectedZone(zone)
+          if (onZoneClick) onZoneClick(zone)
+        }
+
+        // Map zones to positions on a 100x100 grid
+        const zonePositions = {
+          'Main Gate': { x: 45, y: 80, color: '#ff9100' },
+          'Gate 3': { x: 60, y: 72, color: '#ff1744' },
+          'Robotics Lab': { x: 72, y: 50, color: '#ff1744' },
+          'Cafeteria': { x: 35, y: 45, color: '#ffea00' },
+          'Library': { x: 55, y: 30, color: '#2979ff' },
+          'Parking': { x: 25, y: 70, color: '#2979ff' },
+          'Academic Block': { x: 50, y: 55, color: '#ff9100' },
+        }
+
+        const getIncidentsForZone = (zoneName) => {
+          return mockIncidents.filter((i) => i.zone === zoneName)
+        }
+
+        const getOccupancyForZone = (zoneName) => {
+          const z = ZONES.find((z) => z.name === zoneName)
+          return z ? getOccupancyPercent(z) : 0
+        }
+
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Campus Safety Map</div>
+                <div className="text-sm text-gray-300">Real-time zone monitoring</div>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-alert" /> Critical</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-alert" /> High</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-alert" /> Medium</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-info" /> Low</span>
+              </div>
+            </div>
+
+            <div className="relative w-full aspect-[4/3] bg-navy-light rounded-lg border border-white/5 overflow-hidden">
+              {/* Map grid background */}
+              <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
+                backgroundImage: 'linear-gradient(rgba(0,212,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.08) 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+              }} />
+
+              {/* Zone labels and pins */}
+              {Object.entries(zonePositions).map(([name, pos]) => {
+                const incidents = getIncidentsForZone(name)
+                const critical = incidents.filter((i) => i.severity === 'critical' && i.status === 'unacknowledged')
+                const high = incidents.filter((i) => i.severity === 'high' && i.status === 'unacknowledged')
+                const hasActive = critical.length > 0 || high.length > 0
+                const occ = getOccupancyForZone(name)
+                const isSelected = selectedZone === name
+
+                return (
+                  <div
+                    key={name}
+                    className="map-pin absolute"
+                    style={{
+                      left: `${pos.x}%`,
+                      top: `${pos.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    onClick={() => handleZoneClick(name)}
+                  >
+                    <div className="relative flex flex-col items-center">
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-2 transition-all ${
+                          hasActive ? 'border-red-alert/50 shadow-[0_0_20px_rgba(255,23,68,0.3)]' : 'border-cyan-accent/30'
+                        } ${isSelected ? 'scale-125 border-cyan-accent' : ''}`}
+                        style={{
+                          background: hasActive ? 'rgba(255,23,68,0.2)' : 'rgba(0,212,255,0.08)',
+                        }}
+                      >
+                        {incidents.length > 0 ? incidents.length : '✓'}
+                      </div>
+                      <div className="text-[8px] font-mono text-gray-400 mt-0.5 whitespace-nowrap">{name}</div>
+                      {occ > 70 && (
+                        <div className="text-[7px] font-mono text-orange-400 mt-0.5">{occ}%</div>
+                      )}
+                      {isSelected && (
+                        <div className="absolute bottom-full mb-2 glass-panel rounded-lg p-2 text-xs min-w-[120px] border border-white/10 shadow-glow">
+                          <div className="font-bold text-white">{name}</div>
+                          <div className="text-gray-400">Occupancy: {occ}%</div>
+                          <div className="text-gray-400">Alerts: {incidents.length}</div>
+                          {critical.length > 0 && (
+                            <div className="text-red-alert text-[10px]">🔴 {critical.length} critical</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Map legend overlay - paths */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.04]">
+                <path d="M45,80 L60,72 L72,50 L55,30 L35,45 L25,70 Z" stroke="#00d4ff" strokeWidth="0.5" fill="none" />
+                <path d="M60,72 L50,55 L35,45" stroke="#00d4ff" strokeWidth="0.5" fill="none" />
+              </svg>
+
+              <div className="absolute bottom-3 left-3 text-[10px] text-gray-500 font-mono">
+                ● 7 zones monitored
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- Occupancy Panel ---
+      const OccupancyPanel = () => {
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5">
+            <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">Zone Occupancy</div>
+            <div className="space-y-2.5">
+              {ZONES.map((zone) => {
+                const pct = getOccupancyPercent(zone)
+                const color = getOccupancyColor(zone)
+                return (
+                  <div key={zone.id}>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-300">{zone.name}</span>
+                      <span className="font-mono" style={{ color }}>
+                        {zone.occupancy} / {zone.capacity}
+                      </span>
+                    </div>
+                    <div className="occupancy-bar mt-0.5">
+                      <div className="fill" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
+
+      // --- Trend Chart (simplified) ---
+      const TrendChart = () => {
+        const data = [
+          { label: '00:00', incidents: 2, crowd: 1, intrusion: 0, baggage: 1, fire: 0 },
+          { label: '04:00', incidents: 1, crowd: 0, intrusion: 0, baggage: 1, fire: 0 },
+          { label: '08:00', incidents: 4, crowd: 2, intrusion: 1, baggage: 1, fire: 0 },
+          { label: '12:00', incidents: 6, crowd: 3, intrusion: 1, baggage: 1, fire: 1 },
+          { label: '16:00', incidents: 5, crowd: 2, intrusion: 1, baggage: 1, fire: 1 },
+          { label: '20:00', incidents: 3, crowd: 1, intrusion: 1, baggage: 1, fire: 0 },
+        ]
+
+        const maxVal = 8
+
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Incident Trends</div>
+                <div className="text-sm text-gray-300">24-hour activity</div>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-accent" /> All</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-alert" /> Crowd</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-alert" /> Intrusion</span>
+              </div>
+            </div>
+
+            <div className="h-32 flex items-end gap-1.5">
+              {data.map((d, i) => {
+                const height = (d.incidents / maxVal) * 100
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-full flex flex-col items-center gap-0.5">
+                      <div
+                        className="w-full rounded-sm transition-all duration-500"
+                        style={{
+                          height: `${Math.max(4, height * 0.8)}%`,
+                          background: 'linear-gradient(to top, #00d4ff44, #00d4ff88)',
+                          minHeight: '2px',
+                        }}
+                      />
+                      <div
+                        className="w-full rounded-sm transition-all duration-500"
+                        style={{
+                          height: `${Math.max(4, height * 0.5)}%`,
+                          background: 'linear-gradient(to top, #ff910044, #ff910088)',
+                          minHeight: '2px',
+                        }}
+                      />
+                      <div
+                        className="w-full rounded-sm transition-all duration-500"
+                        style={{
+                          height: `${Math.max(4, height * 0.3)}%`,
+                          background: 'linear-gradient(to top, #ff174444, #ff174488)',
+                          minHeight: '2px',
+                        }}
+                      />
+                    </div>
+                    <div className="text-[8px] text-gray-500 font-mono">{d.label}</div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="flex gap-6 mt-3 text-xs text-gray-400 border-t border-white/5 pt-3">
+              <div>
+                <span className="text-gray-500">Today</span>
+                <span className="ml-2 font-bold text-white">37</span>
+              </div>
+              <div>
+                <span className="text-gray-500">This Week</span>
+                <span className="ml-2 font-bold text-white">142</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Peak Zone</span>
+                <span className="ml-2 font-bold text-cyan-accent">Main Gate</span>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- System Health ---
+      const SystemHealth = () => {
+        const services = [
+          { name: 'AI Detection Engine', status: 'online', detail: 'v2.4.1' },
+          { name: 'Tracking Engine', status: 'online', detail: 'v1.9.0' },
+          { name: 'Rule Engine', status: 'online', detail: 'v3.1.2' },
+          { name: 'Agent Service', status: 'online', detail: 'v2.0.0' },
+          { name: 'WebSocket', status: 'connected', detail: 'wss://' },
+          { name: 'Database', status: 'healthy', detail: '24ms' },
+        ]
+
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5">
+            <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">System Health</div>
+            <div className="grid grid-cols-2 gap-2">
+              {services.map((svc) => (
+                <div key={svc.name} className="flex items-center justify-between text-xs bg-black/20 rounded px-2.5 py-1.5 border border-white/5">
+                  <span className="text-gray-300">{svc.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="status-dot online" />
+                    <span className="text-green-400 text-[10px] font-mono">{svc.detail}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-[10px] text-gray-500 font-mono border-t border-white/5 pt-2">
+              Last sync: 2 seconds ago
+            </div>
+          </div>
+        )
+      }
+
+      // --- Activity Feed ---
+      const ActivityFeed = ({ logs }) => {
+        const feedRef = useRef(null)
+
+        useEffect(() => {
+          if (feedRef.current) {
+            feedRef.current.scrollTop = feedRef.current.scrollHeight
+          }
+        }, [logs])
+
+        return (
+          <div className="glass-panel rounded-xl p-4 border border-white/5 h-full">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Live Activity</div>
+              <span className="status-dot online" />
+            </div>
+            <div ref={feedRef} className="h-48 overflow-y-auto space-y-1.5 pr-1">
+              {logs.length === 0 ? (
+                <div className="text-xs text-gray-500 italic">No activity yet...</div>
+              ) : (
+                logs.slice().reverse().map((log, i) => (
+                  <div key={i} className="text-xs font-mono text-gray-400 border-b border-white/5 pb-1.5 flex gap-2">
+                    <span className="text-gray-600 whitespace-nowrap">{log.time || '--:--:--'}</span>
+                    <span className="text-gray-300">{log.message}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      // --- Main Dashboard Page ---
+      const Dashboard = () => {
+        const { incidents, logs, addLog, acknowledgeIncident, overrideSeverity, falsePositive, escalateIncident } = useApp()
+        const [selectedIncident, setSelectedIncident] = useState(null)
+        const [detailOpen, setDetailOpen] = useState(false)
+
+        const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status === 'unacknowledged').length
+        const totalAlerts = incidents.filter((i) => i.status === 'unacknowledged').length
+        const peopleDetected = ZONES.reduce((sum, z) => sum + z.occupancy, 0)
+        const monitoredZones = ZONES.length
+        const aiDecisions = incidents.filter((i) => i.ai_processed).length
+
+        const handleIncidentClick = (inc) => {
+          setSelectedIncident(inc)
+          setDetailOpen(true)
+        }
+
+        const handleCloseDetail = () => {
+          setDetailOpen(false)
+          setSelectedIncident(null)
+        }
+
+        const handleAcknowledge = (inc) => {
+          acknowledgeIncident(inc.incident_id)
+          addLog(`${new Date().toLocaleTimeString()} · Operator acknowledged ${inc.incident_id}`)
+        }
+
+        const handleOverride = (inc) => {
+          const sevs = ['low', 'medium', 'high', 'critical']
+          const idx = sevs.indexOf(inc.severity)
+          const newSev = sevs[(idx + 1) % sevs.length]
+          overrideSeverity(inc.incident_id, newSev)
+          addLog(`${new Date().toLocaleTimeString()} · Severity override for ${inc.incident_id} → ${newSev.toUpperCase()}`)
+        }
+
+        const handleFalsePositive = (inc) => {
+          falsePositive(inc.incident_id)
+          addLog(`${new Date().toLocaleTimeString()} · ${inc.incident_id} marked as false positive`)
+        }
+
+        const handleEscalate = (inc) => {
+          escalateIncident(inc.incident_id)
+          addLog(`${new Date().toLocaleTimeString()} · ${inc.incident_id} escalated to emergency response`)
+        }
+
+        // Auto-select first unacknowledged critical/high incident
+        useEffect(() => {
+          const priority = incidents.find((i) => i.status === 'unacknowledged' && (i.severity === 'critical' || i.severity === 'high'))
+          if (priority && !detailOpen) {
+            setSelectedIncident(priority)
+            setDetailOpen(true)
+          }
+        }, [incidents])
+
+        // Incident list for the panel
+        const priorityIncidents = incidents
+          .filter((i) => i.status === 'unacknowledged')
+          .sort((a, b) => {
+            const order = { critical: 0, high: 1, medium: 2, low: 3 }
+            return order[a.severity] - order[b.severity]
+          })
+
+        return (
+          <div className="pt-20 pl-56 p-6">
+            {/* Header */}
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-white tracking-tight">Campus Safety Command Center</h1>
+              <p className="text-sm text-gray-400 mt-0.5">Real-time AI-assisted monitoring across campus zones</p>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+              <StatCard
+                label="Active Alerts"
+                value={totalAlerts}
+                icon="bell"
+                trend={totalAlerts > 0 ? 12 : -5}
+                trendLabel="vs prior"
+                color={totalAlerts > 0 ? '#ff9100' : '#00e676'}
+              />
+              <StatCard
+                label="Critical Incidents"
+                value={criticalCount}
+                icon="alert-triangle"
+                trend={criticalCount > 0 ? 8 : 0}
+                trendLabel="unacknowledged"
+                color={criticalCount > 0 ? '#ff1744' : '#00e676'}
+              />
+              <StatCard
+                label="People Detected"
+                value={peopleDetected}
+                icon="users"
+                trend={3}
+                trendLabel="vs prior"
+                color="#00d4ff"
+              />
+              <StatCard
+                label="Monitored Zones"
+                value={`${monitoredZones} / ${monitoredZones}`}
+                icon="map-pin"
+                subValue="All online"
+                color="#00e676"
+              />
+              <StatCard
+                label="AI Decisions"
+                value={aiDecisions}
+                icon="brain"
+                trend={5}
+                trendLabel="vs prior"
+                color="#2979ff"
+              />
+            </div>
+
+            {/* Main two-column layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              {/* CCTV - spans 2 cols on large */}
+              <div className="lg:col-span-2">
+                <div className="glass-panel rounded-xl p-4 border border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Live Surveillance</div>
+                      <div className="text-sm text-gray-300">CAM-03 • Gate 3</div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-red-alert">
+                      <span className="blink-live text-xs">●</span>
+                      <span className="text-red-alert/80 font-semibold tracking-wider text-xs">LIVE</span>
+                    </div>
+                  </div>
+                  <CCTVFeed zone="Gate 3" />
+                </div>
+              </div>
+
+              {/* Priority Incidents */}
+              <div className="lg:col-span-1">
+                <div className="glass-panel rounded-xl p-4 border border-white/5 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Priority Incidents</div>
+                      <div className="text-sm text-gray-300">{priorityIncidents.length} unacknowledged</div>
+                    </div>
+                    <span className="status-dot warning" />
+                  </div>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[340px]">
+                    {priorityIncidents.length === 0 ? (
+                      <div className="text-sm text-gray-500 italic">All clear. No active incidents.</div>
+                    ) : (
+                      priorityIncidents.map((inc) => (
+                        <IncidentCard
+                          key={inc.incident_id}
+                          incident={inc}
+                          onClick={() => handleIncidentClick(inc)}
+                          selected={selectedIncident?.incident_id === inc.incident_id}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Detail Panel */}
+            {detailOpen && selectedIncident && (
+              <div className="mb-6">
+                <IncidentDetail
+                  incident={selectedIncident}
+                  onClose={handleCloseDetail}
+                  onAcknowledge={handleAcknowledge}
+                  onOverride={handleOverride}
+                  onFalsePositive={handleFalsePositive}
+                  onEscalate={handleEscalate}
+                />
+              </div>
+            )}
+
+            {/* Bottom grid: Map, Occupancy, Trends, Health, Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <CampusMap />
+              </div>
+              <div>
+                <OccupancyPanel />
+              </div>
+              <div className="lg:col-span-2">
+                <TrendChart />
+              </div>
+              <div>
+                <SystemHealth />
+              </div>
+              <div className="lg:col-span-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ActivityFeed logs={logs} />
+                  <div className="glass-panel rounded-xl p-4 border border-white/5 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-cyan-accent">✓</div>
+                      <div className="text-sm text-gray-400 mt-1">All systems nominal</div>
+                      <div className="text-xs text-gray-500 mt-2 font-mono">
+                        {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })} · 
+                        {incidents.length} incidents logged
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Human oversight banner */}
+            <div className="mt-6 glass-panel-light rounded-lg px-4 py-2.5 border border-cyan-accent/10 flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm">
+                <Icon name="shield-check" size={18} className="text-cyan-accent" />
+                <span className="text-gray-300">Human oversight enabled — </span>
+                <span className="text-gray-500 text-xs">AI recommends. Human decides.</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-green-400">
+                <span className="status-dot online" />
+                <span>Operator online</span>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- App ---
+      const App = () => {
+        const [activePage, setActivePage] = useState('overview')
+        const [incidents, setIncidents] = useState(mockIncidents)
+        const [logs, setLogs] = useState([])
+        const [toast, setToast] = useState(null)
+
+        // Initialize logs from existing incidents
+        useEffect(() => {
+          const initialLogs = incidents.slice(0, 5).map((inc) => ({
+            time: formatTime(inc.timestamp),
+            message: `${INCIDENT_LABELS[inc.type]} detected at ${inc.zone} (${inc.incident_id})`,
+          }))
+          setLogs(initialLogs)
+        }, [])
+
+        const addLog = useCallback((message) => {
+          setLogs((prev) => {
+            const newLog = { time: new Date().toLocaleTimeString(), message }
+            return [newLog, ...prev.slice(0, 49)]
+          })
+        }, [])
+
+        const acknowledgeIncident = useCallback((id) => {
+          setIncidents((prev) =>
+            prev.map((inc) =>
+              inc.incident_id === id
+                ? { ...inc, status: 'acknowledged', updated_at: new Date().toISOString() }
+                : inc
+            )
+          )
+        }, [])
+
+        const overrideSeverity = useCallback((id, newSeverity) => {
+          setIncidents((prev) =>
+            prev.map((inc) =>
+              inc.incident_id === id
+                ? {
+                    ...inc,
+                    severity: newSeverity,
+                    human_override: { severity: newSeverity, by: 'operator', at: new Date().toISOString() },
+                    updated_at: new Date().toISOString(),
+                  }
+                : inc
+            )
+          )
+        }, [])
+
+        const falsePositive = useCallback((id) => {
+          setIncidents((prev) =>
+            prev.map((inc) =>
+              inc.incident_id === id
+                ? { ...inc, false_positive: true, status: 'acknowledged', updated_at: new Date().toISOString() }
+                : inc
+            )
+          )
+        }, [])
+
+        const escalateIncident = useCallback((id) => {
+          setIncidents((prev) =>
+            prev.map((inc) =>
+              inc.incident_id === id
+                ? {
+                    ...inc,
+                    severity: 'critical',
+                    recommended_action: 'emergency_response',
+                    updated_at: new Date().toISOString(),
+                  }
+                : inc
+            )
+          )
+        }, [])
+
+        // Handle realtime events
+        useEffect(() => {
+          const unsubscribe = mockRealtime.subscribe((event) => {
+            if (event.type === 'incident_new' && event.data) {
+              setIncidents((prev) => [event.data, ...prev])
+              addLog(event.log)
+            } else if (event.type === 'incident_update' && event.data) {
+              setIncidents((prev) =>
+                prev.map((inc) => (inc.incident_id === event.data.incident_id ? { ...inc, ...event.data } : inc))
+              )
+              addLog(event.log)
+            } else if (event.type === 'occupancy_update') {
+              // Already handled in mock data mutation
+              // Force re-render by updating state
+              setIncidents((prev) => [...prev])
+            } else if (event.type === 'activity_log') {
+              addLog(event.log)
+            }
+          })
+
+          return () => unsubscribe()
+        }, [addLog])
+
+        const contextValue = {
+          incidents,
+          logs,
+          addLog,
+          acknowledgeIncident,
+          overrideSeverity,
+          falsePositive,
+          escalateIncident,
+        }
+
+        return (
+          <AppContext.Provider value={contextValue}>
+            <ToastProvider>
+              <div className="min-h-screen bg-navy">
+                <Navbar />
+                <Sidebar activePage={activePage} setActivePage={setActivePage} />
+
+                <main className="ml-56 pt-16">
+                  {activePage === 'overview' && <Dashboard />}
+                  {activePage === 'surveillance' && (
+                    <div className="pt-20 p-6">
+                      <h2 className="text-xl font-bold text-white mb-4">Live Surveillance</h2>
+                      <div className="max-w-3xl">
+                        <CCTVFeed zone="Gate 3" />
+                      </div>
+                    </div>
+                  )}
+                  {activePage === 'incidents' && (
+                    <div className="pt-20 p-6">
+                      <h2 className="text-xl font-bold text-white mb-4">All Incidents</h2>
+                      <div className="space-y-2 max-w-2xl">
+                        {incidents.map((inc) => (
+                          <IncidentCard key={inc.incident_id} incident={inc} onClick={() => {}} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {activePage === 'map' && (
+                    <div className="pt-20 p-6">
+                      <h2 className="text-xl font-bold text-white mb-4">Campus Map</h2>
+                      <div className="max-w-3xl">
+                        <CampusMap />
+                      </div>
+                    </div>
+                  )}
+                  {activePage === 'analytics' && (
+                    <div className="pt-20 p-6">
+                      <h2 className="text-xl font-bold text-white mb-4">Analytics</h2>
+                      <div className="max-w-2xl">
+                        <TrendChart />
+                      </div>
+                    </div>
+                  )}
+                  {activePage === 'health' && (
+                    <div className="pt-20 p-6">
+                      <h2 className="text-xl font-bold text-white mb-4">System Health</h2>
+                      <div className="max-w-md">
+                        <SystemHealth />
+                      </div>
+                    </div>
+                  )}
+                </main>
+              </div>
+            </ToastProvider>
+          </AppContext.Provider>
+        )
+      }
+
+      // ============================================================
+      // 5. RENDER
+      // ============================================================
+
+      const root = ReactDOM.createRoot(document.getElementById('root'))
+      root.render(<App />)
+
+      // Initialize Lucide icons
+      //if (window.lucide) {
+      //  window.lucide.createIcons()
+     // }
+    </script>
+  </body>
+</html>
