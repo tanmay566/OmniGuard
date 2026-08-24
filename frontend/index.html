@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Campus Sentinel · Safety Intelligence</title>
+    <title>OmniGuard · Safety Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -556,6 +556,78 @@
         }
         return map[type] || 'alert-circle'
       }
+
+      const API_BASE_URL =
+        window.OMNIGUARD_API_BASE_URL || (window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : window.location.origin)
+
+      const apiPath = (path) => `${API_BASE_URL}${path}`
+      const wsPath = (path) => {
+        const base = API_BASE_URL.replace(/^http/, 'ws')
+        return `${base}${path}`
+      }
+
+      const apiRequest = async (path, options = {}) => {
+        const res = await fetch(apiPath(path), {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {}),
+          },
+          body: options.body && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body,
+        })
+        if (!res.ok) throw new Error(`API ${res.status}`)
+        return res.json()
+      }
+
+      const BACKEND_TYPE_TO_UI = {
+        intrusion: 'restricted_intrusion',
+        overcrowding: 'crowd_density',
+        fire: 'fire_smoke',
+        smoke: 'fire_smoke',
+      }
+
+      const normalizeIncident = (incident) => {
+        if (!incident) return incident
+        const status = incident.status === 'new' ? 'unacknowledged' : incident.status === 'false_positive' ? 'dismissed' : incident.status
+        return {
+          ...incident,
+          type: BACKEND_TYPE_TO_UI[incident.type] || incident.type,
+          status,
+          false_positive: incident.false_positive || incident.status === 'false_positive',
+          detection_confidence: incident.detection_confidence ?? 0,
+          ai_processed: Boolean(incident.severity || incident.reasoning_summary),
+        }
+      }
+
+      const displayZoneName = (zone) =>
+        String(zone || '')
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+
+      const applyZoneOccupancy = (record) => {
+        if (!record) return
+        const name = record.display_name || displayZoneName(record.zone)
+        let zone = ZONES.find((z) => z.name === name || z.id === String(record.zone || '').toLowerCase().replace(/_/g, '-'))
+        if (!zone) {
+          zone = {
+            id: String(record.zone || name).toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-'),
+            name,
+            occupancy: 0,
+            capacity: record.capacity || 1,
+            lat: record.x || record.map_pin?.x || 50,
+            lng: record.y || record.map_pin?.y || 50,
+          }
+          ZONES.push(zone)
+        }
+        zone.name = name
+        zone.occupancy = record.current_count ?? zone.occupancy
+        zone.capacity = record.capacity ?? zone.capacity
+      }
+
+      const activityToLog = (item) => ({
+        time: item.time ? formatTime(item.time) : new Date().toLocaleTimeString(),
+        message: item.title ? `${item.title}${item.message ? ` · ${item.message}` : ''}` : item.message || item.event || 'Backend activity',
+      })
 
       // ============================================================
       // 4. REACT COMPONENTS
@@ -1664,40 +1736,85 @@
             `${i.incident_id} ${i.zone} ${INCIDENT_LABELS[i.type]}`.toLowerCase().includes(query.toLowerCase())
         )
 
-        const handleAcknowledge = (inc) => {
-          updateIncident(inc.incident_id, { status: 'acknowledged' })
-          addLog(`Operator acknowledged ${inc.incident_id}`)
-          toast.addToast(`${inc.incident_id} acknowledged`, 'success')
+        const handleAcknowledge = async (inc) => {
+          try {
+            await updateIncident(inc.incident_id, { status: 'acknowledged' }, () =>
+              apiRequest(`/api/incidents/${inc.incident_id}/acknowledge`, {
+                method: 'POST',
+                body: { operator_name: 'operator' },
+              })
+            )
+            addLog(`Operator acknowledged ${inc.incident_id}`)
+            toast.addToast(`${inc.incident_id} acknowledged`, 'success')
+          } catch (err) {
+            toast.addToast(`Could not acknowledge ${inc.incident_id}`, 'error')
+          }
         }
 
-        const handleOverride = (inc) => {
+        const handleOverride = async (inc) => {
           const sevs = ['low', 'medium', 'high', 'critical']
           const idx = sevs.indexOf(inc.severity)
           const newSev = sevs[(idx + 1) % sevs.length]
-          updateIncident(inc.incident_id, {
-            severity: newSev,
-            human_override: { severity: newSev, by: 'operator', at: new Date().toISOString() },
-          })
-          addLog(`Severity override for ${inc.incident_id} → ${newSev.toUpperCase()}`)
-          toast.addToast(`Severity overridden to ${getSeverityLabel(newSev)}`, 'warning')
+          try {
+            await updateIncident(
+              inc.incident_id,
+              {
+                severity: newSev,
+                human_override: { severity: newSev, by: 'operator', at: new Date().toISOString() },
+              },
+              () =>
+                apiRequest(`/api/incidents/${inc.incident_id}/override`, {
+                  method: 'POST',
+                  body: { new_severity: newSev, reason: 'Operator severity override from dashboard' },
+                })
+            )
+            addLog(`Severity override for ${inc.incident_id} → ${newSev.toUpperCase()}`)
+            toast.addToast(`Severity overridden to ${getSeverityLabel(newSev)}`, 'warning')
+          } catch (err) {
+            toast.addToast(`Could not override ${inc.incident_id}`, 'error')
+          }
         }
 
-        const handleFalsePositive = (inc) => {
-          updateIncident(inc.incident_id, { false_positive: true, status: 'dismissed' })
-          addLog(`${inc.incident_id} marked as false positive`)
-          toast.addToast(`${inc.incident_id} marked as false positive`, 'info')
+        const handleFalsePositive = async (inc) => {
+          try {
+            await updateIncident(inc.incident_id, { false_positive: true, status: 'dismissed' }, () =>
+              apiRequest(`/api/incidents/${inc.incident_id}/false-positive`, {
+                method: 'POST',
+                body: { reason: 'Operator marked false positive from dashboard' },
+              })
+            )
+            addLog(`${inc.incident_id} marked as false positive`)
+            toast.addToast(`${inc.incident_id} marked as false positive`, 'info')
+          } catch (err) {
+            toast.addToast(`Could not mark ${inc.incident_id} as false positive`, 'error')
+          }
         }
 
-        const handleEscalate = (inc) => {
-          updateIncident(inc.incident_id, { severity: 'critical', recommended_action: 'emergency_response' })
-          addLog(`${inc.incident_id} escalated to emergency response`)
-          toast.addToast(`${inc.incident_id} escalated — emergency response notified`, 'error')
+        const handleEscalate = async (inc) => {
+          try {
+            await updateIncident(inc.incident_id, { severity: 'critical', recommended_action: 'emergency_response' }, () =>
+              apiRequest(`/api/incidents/${inc.incident_id}/override`, {
+                method: 'POST',
+                body: { new_severity: 'critical', reason: 'Operator escalated incident from dashboard' },
+              })
+            )
+            addLog(`${inc.incident_id} escalated to emergency response`)
+            toast.addToast(`${inc.incident_id} escalated — emergency response notified`, 'error')
+          } catch (err) {
+            toast.addToast(`Could not escalate ${inc.incident_id}`, 'error')
+          }
         }
 
-        const handleResolve = (inc) => {
-          updateIncident(inc.incident_id, { status: 'resolved' })
-          addLog(`${inc.incident_id} resolved`)
-          toast.addToast(`${inc.incident_id} resolved`, 'success')
+        const handleResolve = async (inc) => {
+          try {
+            await updateIncident(inc.incident_id, { status: 'resolved' }, () =>
+              apiRequest(`/api/incidents/${inc.incident_id}/resolve`, { method: 'POST' })
+            )
+            addLog(`${inc.incident_id} resolved`)
+            toast.addToast(`${inc.incident_id} resolved`, 'success')
+          } catch (err) {
+            toast.addToast(`Could not resolve ${inc.incident_id}`, 'error')
+          }
         }
 
         if (selected) {
@@ -2161,8 +2278,13 @@
           localStorage.removeItem('omniguard-mode')
           setMode('')
         }
-        const updateIncident = (id, patch) =>
+        const updateIncident = async (id, patch, apiCall) => {
           setIncidents((p) => p.map((i) => (i.incident_id === id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))
+          if (!apiCall) return patch
+          const saved = normalizeIncident(await apiCall())
+          setIncidents((p) => p.map((i) => (i.incident_id === id ? { ...i, ...saved } : i)))
+          return saved
+        }
         const addCamera = (c) => {
           const camera = {
             id: `cam-${String(cameras.length + 1).padStart(2, '0')}`,
@@ -2179,14 +2301,85 @@
         }
 
         useEffect(() => {
-          const unsubscribe = mockRealtime.subscribe((event) => {
-            if (event.type === 'incident_new' && event.data) setIncidents((prev) => [event.data, ...prev])
-            if (event.type === 'incident_update' && event.data)
-              setIncidents((prev) => prev.map((i) => (i.incident_id === event.data.incident_id ? { ...i, ...event.data } : i)))
-            if (event.type === 'occupancy_update') setIncidents((prev) => [...prev])
+          let cancelled = false
+          const loadBackendData = async () => {
+            try {
+              const [incidentData, activityData, zoneData] = await Promise.all([
+                apiRequest('/api/incidents?limit=100'),
+                apiRequest('/api/activity?limit=50'),
+                apiRequest('/api/zones'),
+              ])
+              if (cancelled) return
+              if (Array.isArray(zoneData)) zoneData.forEach(applyZoneOccupancy)
+              if (Array.isArray(incidentData)) setIncidents(incidentData.map(normalizeIncident))
+              if (Array.isArray(activityData) && activityData.length) setLogs(activityData.map(activityToLog))
+            } catch (err) {
+              addLog('Backend unavailable - using local demo data')
+            }
+          }
+          loadBackendData()
+          return () => {
+            cancelled = true
+          }
+        }, [])
+
+        useEffect(() => {
+          let ws
+          let fallbackUnsubscribe = null
+          let opened = false
+
+          const applyEvent = (event) => {
+            const eventType = event.event || event.type
+            const data = event.data
+            if (eventType === 'incident_new' && data) {
+              const incident = normalizeIncident(data)
+              setIncidents((prev) => [incident, ...prev.filter((i) => i.incident_id !== incident.incident_id)])
+            }
+            if (eventType === 'incident_update' && data) {
+              const incident = normalizeIncident(data)
+              setIncidents((prev) => prev.map((i) => (i.incident_id === incident.incident_id ? { ...i, ...incident } : i)))
+            }
+            if (eventType === 'zone_occupancy' && data) {
+              applyZoneOccupancy(data)
+              setIncidents((prev) => [...prev])
+            }
+            if (eventType === 'demo_reset') {
+              setIncidents([])
+              setLogs([])
+            }
             if (event.log) addLog(event.log)
-          })
-          return () => unsubscribe()
+            if (data?.message && eventType !== 'pong') addLog(data.message)
+          }
+
+          const startFallback = () => {
+            if (fallbackUnsubscribe) return
+            fallbackUnsubscribe = mockRealtime.subscribe(applyEvent)
+          }
+
+          try {
+            ws = new WebSocket(wsPath('/ws/events'))
+            ws.onopen = () => {
+              opened = true
+            }
+            ws.onmessage = (message) => {
+              try {
+                applyEvent(JSON.parse(message.data))
+              } catch (err) {}
+            }
+            ws.onerror = () => {
+              if (!opened) startFallback()
+            }
+            ws.onclose = () => {
+              if (!opened) startFallback()
+            }
+          } catch (err) {
+            startFallback()
+          }
+
+          return () => {
+            if (ws) ws.close()
+            if (fallbackUnsubscribe) fallbackUnsubscribe()
+          }
         }, [])
 
         if (!mode) return <LoginScreen onLogin={login} />
