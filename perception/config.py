@@ -31,7 +31,7 @@ FALL_MIN_KEYPOINT_CONFIDENCE = 0.35
 FALL_BODY_ANGLE_DEGREES = 35.0
 
 # ----------------------- Processing -----------------------
-FRAME_SKIP = 8
+FRAME_SKIP = 5
 SHOW_VIDEO = True
 SAVE_ANNOTATED_VIDEO = True
 OUTPUT_VIDEO_PATH = "annotated_output.mp4"

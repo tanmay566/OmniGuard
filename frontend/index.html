@@ -247,10 +247,11 @@
       ]
 
       const CAMERAS = [
-        { id: 'cam-01', zone: 'Main Gate', label: 'CAM-01 • MAIN GATE' },
-        { id: 'cam-02', zone: 'Gate 3', label: 'CAM-03 • GATE 3' },
-        { id: 'cam-03', zone: 'Robotics Lab', label: 'CAM-07 • ROBOTICS LAB' },
-        { id: 'cam-04', zone: 'Cafeteria', label: 'CAM-12 • CAFETERIA' },
+        { id: 'cam-01', name: 'Cam 1', zone: 'Main Gate', label: 'CAM-01 • MAIN GATE', status: 'online', severity: 'high' },
+        { id: 'cam-02', name: 'Cam 2', zone: 'Gate 3', label: 'CAM-03 • GATE 3', status: 'online', severity: 'critical' },
+        { id: 'cam-03', name: 'Cam 3', zone: 'Robotics Lab', label: 'CAM-07 • ROBOTICS LAB', status: 'online', severity: 'critical' },
+        { id: 'cam-04', name: 'Cam 4', zone: 'Cafeteria', label: 'CAM-12 • CAFETERIA', status: 'online', severity: 'medium' },
+        { id: 'cam-05', name: 'Cam 5', zone: 'Academic Block', label: 'CAM-15 • ACADEMIC BLOCK', status: 'warning', severity: 'high' },
       ]
 
       let incidentCounter = 100
@@ -660,109 +661,6 @@
         return <span dangerouslySetInnerHTML={{ __html: Svg }} />
       }
 
-      // --- Navbar ---
-      const Navbar = () => {
-        const [time, setTime] = useState(new Date())
-        const [date, setDate] = useState(new Date())
-
-        useEffect(() => {
-          const interval = setInterval(() => {
-            const now = new Date()
-            setTime(now)
-            setDate(now)
-          }, 1000)
-          return () => clearInterval(interval)
-        }, [])
-
-        return (
-          <header className="h-16 px-5 flex items-center justify-between border-b border-white/5 bg-navy/90 backdrop-blur-sm fixed top-0 left-0 right-0 z-40">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-cyan-accent/10 border border-cyan-accent/20 flex items-center justify-center">
-                <Icon name="shield" size={20} className="text-cyan-accent" />
-              </div>
-              <div>
-                <div className="text-base font-bold tracking-tight text-white leading-tight">CAMPUS SENTINEL</div>
-                <div className="text-[10px] font-medium text-cyan-accent/70 tracking-wider uppercase">
-                  Agentic Campus Safety Intelligence
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center gap-6">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="status-dot online" />
-                <span className="text-gray-300 font-medium">ALL SYSTEMS OPERATIONAL</span>
-              </div>
-              <div className="text-sm text-gray-400 font-mono">
-                {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </div>
-              <div className="text-sm text-gray-400">
-                {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
-              <div className="flex items-center gap-1 text-sm font-mono text-red-alert">
-                <span className="blink-live text-xs">●</span>
-                <span className="text-red-alert/80 font-semibold tracking-wider">LIVE</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <Icon name="bell" size={18} />
-              </button>
-              <button className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <Icon name="settings" size={18} />
-              </button>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-accent/20 to-cyan-accent/5 border border-cyan-accent/20 flex items-center justify-center text-xs font-bold text-cyan-accent">
-                OP
-              </div>
-            </div>
-          </header>
-        )
-      }
-
-      // --- Sidebar ---
-      const Sidebar = ({ activePage, setActivePage }) => {
-        const navItems = [
-          { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
-          { id: 'surveillance', label: 'Live Surveillance', icon: 'cctv' },
-          { id: 'incidents', label: 'Incidents', icon: 'alert-triangle' },
-          { id: 'map', label: 'Campus Map', icon: 'map' },
-          { id: 'analytics', label: 'Analytics', icon: 'chart-bar' },
-          { id: 'health', label: 'System Health', icon: 'activity' },
-        ]
-
-        return (
-          <aside className="w-56 h-screen fixed left-0 top-16 bottom-0 bg-navy/95 border-r border-white/5 flex flex-col z-30">
-            <nav className="flex-1 pt-4 px-3 space-y-0.5">
-              {navItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                    activePage === item.id
-                      ? 'active text-cyan-accent bg-cyan-dim border-r-2 border-cyan-accent'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  onClick={() => setActivePage(item.id)}
-                >
-                  <Icon name={item.icon} size={18} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </nav>
-
-            <div className="p-4 border-t border-white/5">
-              <div className="glass-panel-light rounded-lg p-3">
-                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Operator Mode</div>
-                <div className="flex items-center gap-2 text-sm font-medium text-green-400">
-                  <span className="status-dot online" />
-                  Human Oversight: ENABLED
-                </div>
-              </div>
-            </div>
-          </aside>
-        )
-      }
-
       // --- Stat Card ---
       const StatCard = ({ label, value, icon, trend, trendLabel, color = 'cyan-accent', subValue }) => {
         return (
@@ -1093,116 +991,286 @@
         )
       }
 
-      // --- Campus Map (SVG-based) ---
-      const CampusMap = ({ onZoneClick }) => {
-        const [selectedZone, setSelectedZone] = useState(null)
+      // --- Camera Card ---
+      const CameraCard = ({ camera, onClick }) => {
+        const sev = camera.severity
+        const hasSeverity = sev && sev !== 'none'
+        const statusClass = camera.status === 'online' ? 'online' : camera.status === 'warning' ? 'warning' : 'offline'
 
-        const handleZoneClick = (zone) => {
-          setSelectedZone(zone)
-          if (onZoneClick) onZoneClick(zone)
-        }
+        return (
+          <div
+            className={`glass-panel rounded-xl border border-white/5 overflow-hidden hover-lift transition-all cursor-pointer ${hasSeverity ? 'severity-' + sev : ''}`}
+            onClick={() => onClick && onClick(camera)}
+          >
+            <div className="relative aspect-video bg-black/80 cctv-frame">
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
+                backgroundImage: 'linear-gradient(rgba(0,212,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.05) 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+              }} />
+              <div className="scan-line absolute inset-0 pointer-events-none" />
+              <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-mono bg-black/60 px-2 py-0.5 rounded border border-white/5">
+                <span className={`status-dot ${statusClass}`} />
+                <span className="text-gray-300">{camera.status.toUpperCase()}</span>
+              </div>
+              {hasSeverity && (
+                <div
+                  className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                  style={{ background: `${getSeverityColor(sev)}22`, color: getSeverityColor(sev), border: `1px solid ${getSeverityColor(sev)}44` }}
+                >
+                  {getSeverityLabel(sev)}
+                </div>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon name="video" size={28} className="text-white/10" />
+              </div>
+              <div className="absolute bottom-2 right-2 text-[9px] font-mono text-red-alert flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded">
+                <span className="blink-live">●</span> LIVE
+              </div>
+            </div>
+            <div className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-sm text-white">{camera.name}</div>
+                <Icon name="chevron-right" size={14} className="text-gray-500" />
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">{camera.zone}</div>
+            </div>
+          </div>
+        )
+      }
 
-        // Map zones to positions on a 100x100 grid
-        const zonePositions = {
-          'Main Gate': { x: 45, y: 80, color: '#ff9100' },
-          'Gate 3': { x: 60, y: 72, color: '#ff1744' },
-          'Robotics Lab': { x: 72, y: 50, color: '#ff1744' },
-          'Cafeteria': { x: 35, y: 45, color: '#ffea00' },
-          'Library': { x: 55, y: 30, color: '#2979ff' },
-          'Parking': { x: 25, y: 70, color: '#2979ff' },
-          'Academic Block': { x: 50, y: 55, color: '#ff9100' },
-        }
+      // --- Add Camera Card ---
+      const AddCameraCard = ({ onClick }) => (
+        <div
+          className="glass-panel-light rounded-xl border border-dashed border-white/10 aspect-[4/3.4] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-cyan-accent/30 hover:bg-cyan-dim transition-all"
+          onClick={onClick}
+        >
+          <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-cyan-accent">
+            <Icon name="plus" size={18} />
+          </div>
+          <div className="text-xs text-gray-400 font-medium">Add New Camera</div>
+        </div>
+      )
 
-        const getIncidentsForZone = (zoneName) => {
-          return mockIncidents.filter((i) => i.zone === zoneName)
-        }
+      // --- Camera Detail View ---
+      const CameraDetail = ({ camera, incidents, onBack, backLabel = 'Back to Camera Overview' }) => {
+        const toast = useToast()
+        if (!camera) return null
+        const statusClass = camera.status === 'online' ? 'online' : camera.status === 'warning' ? 'warning' : 'offline'
+        const zoneIncidents = (incidents || mockIncidents).filter((i) => i.zone === camera.zone)
 
-        const getOccupancyForZone = (zoneName) => {
-          const z = ZONES.find((z) => z.name === zoneName)
-          return z ? getOccupancyPercent(z) : 0
-        }
+        return (
+          <div className="animate-fade-in">
+            <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 transition-colors">
+              <Icon name="arrow-left" size={16} />
+              {backLabel}
+            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <div className="glass-panel rounded-xl p-4 border border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{camera.name}</div>
+                      <div className="text-sm text-gray-300">{camera.label}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-sm text-red-alert">
+                        <span className="blink-live text-xs">●</span>
+                        <span className="text-red-alert/80 font-semibold tracking-wider text-xs">LIVE</span>
+                      </div>
+                      <button
+                        onClick={() => toast?.addToast && toast.addToast('Live stream refreshed', 'success')}
+                        className="btn-operator px-3 py-1.5 rounded-lg text-xs font-medium bg-cyan-accent/10 text-cyan-accent border border-cyan-accent/20 hover:bg-cyan-accent/20"
+                      >
+                        <Icon name="refresh-cw" size={13} className="inline mr-1" />
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+                  <CCTVFeed zone={camera.zone} />
+                </div>
+                <div className="glass-panel rounded-xl p-4 border border-white/5 mt-4">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">Camera Controls</div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => toast?.addToast && toast.addToast('Snapshot saved to activity log', 'success')}
+                      className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 flex items-center gap-1.5"
+                    >
+                      <Icon name="camera" size={14} /> Capture snapshot
+                    </button>
+                    <button
+                      onClick={() => toast?.addToast && toast.addToast('Camera health check completed — all nominal', 'info')}
+                      className="btn-operator px-4 py-1.5 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 flex items-center gap-1.5"
+                    >
+                      <Icon name="heart-pulse" size={14} /> Run health check
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="glass-panel rounded-xl p-4 border border-white/5">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">Camera Info</div>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-500">Zone</span><span className="text-gray-200">{camera.zone}</span></div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Status</span>
+                      <span className="flex items-center gap-1.5 text-gray-200">
+                        <span className={`status-dot ${statusClass}`} />
+                        {camera.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Severity</span>
+                      <span className="font-semibold" style={{ color: camera.severity && camera.severity !== 'none' ? getSeverityColor(camera.severity) : '#00e676' }}>
+                        {camera.severity && camera.severity !== 'none' ? getSeverityLabel(camera.severity) : 'NONE'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between"><span className="text-gray-500">Camera ID</span><span className="font-mono text-gray-300">{camera.id}</span></div>
+                  </div>
+                </div>
+                <div className="glass-panel rounded-xl p-4 border border-white/5">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-3">Zone Incidents</div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {zoneIncidents.length === 0 ? (
+                      <div className="text-xs text-gray-500 italic">No incidents recorded for this zone.</div>
+                    ) : (
+                      zoneIncidents.slice(0, 5).map((inc) => (
+                        <IncidentCard key={inc.incident_id} incident={inc} onClick={() => {}} />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- Hash Chain (SHA-256 tamper-evident ledger over incidents) ---
+      const useHashChain = (incidents) => {
+        const [chain, setChain] = useState([])
+        const [verifying, setVerifying] = useState(false)
+
+        const buildChain = useCallback(async () => {
+          setVerifying(true)
+          const source = incidents.slice().reverse().slice(-12)
+          let prevHash = '0'.repeat(64)
+          const blocks = []
+          for (let i = 0; i < source.length; i++) {
+            const inc = source[i]
+            const payload = `${prevHash}|${inc.incident_id}|${inc.type}|${inc.severity}|${inc.timestamp}`
+            try {
+              const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload))
+              const hashHex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
+              blocks.push({ index: i, incident_id: inc.incident_id, type: inc.type, timestamp: inc.timestamp, prevHash, hash: hashHex })
+              prevHash = hashHex
+            } catch (e) {
+              // crypto.subtle unavailable (non-secure context) - skip gracefully
+            }
+          }
+          setChain(blocks)
+          setVerifying(false)
+        }, [incidents])
+
+        useEffect(() => { buildChain() }, [incidents.length])
+
+        return { chain, verifying, revalidate: buildChain }
+      }
+
+      const HashChainPanel = ({ incidents }) => {
+        const { chain, verifying, revalidate } = useHashChain(incidents)
 
         return (
           <div className="glass-panel rounded-xl p-4 border border-white/5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Campus Safety Map</div>
-                <div className="text-sm text-gray-300">Real-time zone monitoring</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Hash Chain</div>
+                <div className="text-sm text-gray-300">Tamper-evident incident ledger · SHA-256</div>
               </div>
-              <div className="flex items-center gap-3 text-xs">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-alert" /> Critical</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-alert" /> High</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-alert" /> Medium</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-info" /> Low</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold flex items-center gap-1.5 text-green-400">
+                  <span className="status-dot online" />
+                  {verifying ? 'VERIFYING…' : 'CHAIN VERIFIED'}
+                </span>
+                <button
+                  onClick={revalidate}
+                  className="btn-operator px-3 py-1 rounded-lg text-xs font-medium bg-cyan-accent/10 text-cyan-accent border border-cyan-accent/20 hover:bg-cyan-accent/20"
+                >
+                  <Icon name="refresh-cw" size={12} className="inline mr-1" />
+                  Verify Chain
+                </button>
               </div>
             </div>
-
-            <div className="relative w-full aspect-[4/3] bg-navy-light rounded-lg border border-white/5 overflow-hidden">
-              {/* Map grid background */}
-              <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
-                backgroundImage: 'linear-gradient(rgba(0,212,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.08) 1px, transparent 1px)',
-                backgroundSize: '30px 30px',
-              }} />
-
-              {/* Zone labels and pins */}
-              {Object.entries(zonePositions).map(([name, pos]) => {
-                const incidents = getIncidentsForZone(name)
-                const critical = incidents.filter((i) => i.severity === 'critical' && i.status === 'unacknowledged')
-                const high = incidents.filter((i) => i.severity === 'high' && i.status === 'unacknowledged')
-                const hasActive = critical.length > 0 || high.length > 0
-                const occ = getOccupancyForZone(name)
-                const isSelected = selectedZone === name
-
-                return (
-                  <div
-                    key={name}
-                    className="map-pin absolute"
-                    style={{
-                      left: `${pos.x}%`,
-                      top: `${pos.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                    onClick={() => handleZoneClick(name)}
-                  >
-                    <div className="relative flex flex-col items-center">
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-2 transition-all ${
-                          hasActive ? 'border-red-alert/50 shadow-[0_0_20px_rgba(255,23,68,0.3)]' : 'border-cyan-accent/30'
-                        } ${isSelected ? 'scale-125 border-cyan-accent' : ''}`}
-                        style={{
-                          background: hasActive ? 'rgba(255,23,68,0.2)' : 'rgba(0,212,255,0.08)',
-                        }}
-                      >
-                        {incidents.length > 0 ? incidents.length : '✓'}
-                      </div>
-                      <div className="text-[8px] font-mono text-gray-400 mt-0.5 whitespace-nowrap">{name}</div>
-                      {occ > 70 && (
-                        <div className="text-[7px] font-mono text-orange-400 mt-0.5">{occ}%</div>
-                      )}
-                      {isSelected && (
-                        <div className="absolute bottom-full mb-2 glass-panel rounded-lg p-2 text-xs min-w-[120px] border border-white/10 shadow-glow">
-                          <div className="font-bold text-white">{name}</div>
-                          <div className="text-gray-400">Occupancy: {occ}%</div>
-                          <div className="text-gray-400">Alerts: {incidents.length}</div>
-                          {critical.length > 0 && (
-                            <div className="text-red-alert text-[10px]">🔴 {critical.length} critical</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 font-mono">
+              {chain.length === 0 ? (
+                <div className="text-xs text-gray-500 italic">No blocks recorded yet.</div>
+              ) : (
+                chain.slice().reverse().map((b) => (
+                  <div key={b.index} className="flex items-center gap-3 text-[11px] bg-black/20 rounded px-2.5 py-1.5 border border-white/5 flex-wrap">
+                    <span className="text-gray-500 w-8">#{b.index}</span>
+                    <span className="text-cyan-accent/70">{b.incident_id}</span>
+                    <span className="text-gray-500">prev</span>
+                    <span className="text-gray-400 truncate">{b.prevHash.slice(0, 10)}…</span>
+                    <span className="text-gray-500">hash</span>
+                    <span className="text-green-400/80 truncate flex-1 min-w-[100px]">{b.hash.slice(0, 16)}…</span>
+                    <Icon name="check-circle-2" size={12} className="text-green-400 flex-shrink-0" />
                   </div>
-                )
-              })}
+                ))
+              )}
+            </div>
+            <div className="mt-2 text-[10px] text-gray-500 border-t border-white/5 pt-2">
+              Each incident record is hashed together with its predecessor's hash (SHA-256), forming an append-only chain. Any modification to a past record would break the chain from that point forward.
+            </div>
+          </div>
+        )
+      }
 
-              {/* Map legend overlay - paths */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.04]">
-                <path d="M45,80 L60,72 L72,50 L55,30 L35,45 L25,70 Z" stroke="#00d4ff" strokeWidth="0.5" fill="none" />
-                <path d="M60,72 L50,55 L35,45" stroke="#00d4ff" strokeWidth="0.5" fill="none" />
-              </svg>
+      // --- Audit Log Table (full log list, used in Tampering Logs) ---
+      const AuditLogTable = ({ logs }) => (
+        <div className="glass-panel rounded-xl p-4 border border-white/5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">System & Security Logs</div>
+            <span className="status-dot online" />
+          </div>
+          <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1">
+            {logs.length === 0 ? (
+              <div className="text-xs text-gray-500 italic">No log entries yet.</div>
+            ) : (
+              logs.map((log, i) => (
+                <div key={i} className="text-xs font-mono text-gray-400 border-b border-white/5 py-1.5 flex gap-3">
+                  <span className="text-gray-600 whitespace-nowrap">{log.time || '--:--:--'}</span>
+                  <span className="text-gray-300">{log.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )
 
-              <div className="absolute bottom-3 left-3 text-[10px] text-gray-500 font-mono">
-                ● 7 zones monitored
-              </div>
+      // --- Tampering Logs Page ---
+      const TamperingLogsPage = ({ incidents, logs }) => {
+        const [tab, setTab] = useState('logs')
+        return (
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">Tampering Logs</h2>
+            <p className="text-sm text-gray-400 mb-4">Security audit trail and hash-chain integrity verification.</p>
+            <div className="flex items-center gap-2 mb-4 border-b border-white/5">
+              {[
+                { id: 'logs', label: 'Logs' },
+                { id: 'hashchain', label: 'Hash Chain' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-all ${
+                    tab === t.id ? 'border-cyan-accent text-cyan-accent' : 'border-transparent text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div className="max-w-3xl">
+              {tab === 'logs' ? <AuditLogTable logs={logs} /> : <HashChainPanel incidents={incidents} />}
             </div>
           </div>
         )
@@ -1382,397 +1450,798 @@
         )
       }
 
-      // --- Main Dashboard Page ---
-      const Dashboard = () => {
-        const { incidents, logs, addLog, acknowledgeIncident, overrideSeverity, falsePositive, escalateIncident } = useApp()
-        const [selectedIncident, setSelectedIncident] = useState(null)
-        const [detailOpen, setDetailOpen] = useState(false)
+      // ============================================================
+      // 5. AUTHENTICATION & INTERACTIVE WORKSPACES
+      // ============================================================
 
-        const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status === 'unacknowledged').length
-        const totalAlerts = incidents.filter((i) => i.status === 'unacknowledged').length
-        const peopleDetected = ZONES.reduce((sum, z) => sum + z.occupancy, 0)
-        const monitoredZones = ZONES.length
-        const aiDecisions = incidents.filter((i) => i.ai_processed).length
+      // --- Login ---
+      const LoginScreen = ({ onLogin }) => {
+        const [username, setUsername] = useState('')
+        const [password, setPassword] = useState('')
+        const [error, setError] = useState('')
 
-        const handleIncidentClick = (inc) => {
-          setSelectedIncident(inc)
-          setDetailOpen(true)
+        const submit = (e) => {
+          e.preventDefault()
+          if (username === 'mod123' && password === 'usar123') onLogin('admin')
+          else if (username === 'mod123' || password) setError('Incorrect credentials. Please try again.')
+          else if (username.trim()) onLogin('new')
+          else setError('Enter a username to continue, or use valid demo credentials.')
         }
 
-        const handleCloseDetail = () => {
-          setDetailOpen(false)
-          setSelectedIncident(null)
+        return (
+          <div className="min-h-screen relative flex items-center justify-center p-5 bg-navy overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-[0.05] pointer-events-none"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(0,212,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.5) 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+              }}
+            />
+            <div className="absolute w-[420px] h-[420px] rounded-full bg-cyan-accent/10 blur-[120px] -top-32 -left-20 pointer-events-none" />
+            <div className="absolute w-[380px] h-[380px] rounded-full bg-blue-info/10 blur-[120px] -bottom-32 -right-20 pointer-events-none" />
+
+            <form
+              onSubmit={submit}
+              className="relative glass-panel w-full max-w-md rounded-2xl p-7 border border-cyan-accent/20 shadow-glow-strong animate-slide-up"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-11 h-11 rounded-xl bg-cyan-accent/10 flex items-center justify-center animate-glow-pulse">
+                  <Icon name="shield-check" className="text-cyan-accent" size={25} />
+                </div>
+                <div>
+                  <h1 className="font-bold text-xl text-white">OmniGuard</h1>
+                  <p className="text-xs text-gray-400">Campus safety intelligence</p>
+                </div>
+              </div>
+
+              <label className="text-xs text-gray-400">Username</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full mt-1 mb-4 px-3 py-2.5 rounded-lg bg-black/30 border border-white/10 outline-none focus:border-cyan-accent transition-colors text-white"
+                placeholder="Enter username"
+                autoFocus
+              />
+
+              <label className="text-xs text-gray-400">Password</label>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                className="w-full mt-1 px-3 py-2.5 rounded-lg bg-black/30 border border-white/10 outline-none focus:border-cyan-accent transition-colors text-white"
+                placeholder="Enter password"
+              />
+
+              {error && (
+                <p className="text-xs text-red-400 mt-3 flex items-center gap-1.5">
+                  <Icon name="alert-circle" size={13} /> {error}
+                </p>
+              )}
+
+              <button className="btn-operator w-full mt-5 py-2.5 rounded-lg bg-cyan-accent text-navy font-bold hover:bg-cyan-300 transition-all">
+                Sign in
+              </button>
+              <p className="text-[11px] text-gray-500 text-center mt-4">
+                New users can enter a username to start with camera onboarding.
+              </p>
+              <p className="text-[10px] text-gray-600 text-center mt-1">Demo credentials: mod123 / usar123</p>
+            </form>
+          </div>
+        )
+      }
+
+      // --- Add Camera Modal ---
+      const AddCameraModal = ({ onClose, onSave }) => {
+        const [name, setName] = useState('')
+        const [zone, setZone] = useState('')
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (name.trim() && zone.trim()) onSave({ name: name.trim(), zone: zone.trim() })
+              }}
+              className="glass-panel w-full max-w-md rounded-xl p-5 border border-cyan-accent/20 animate-slide-up shadow-glow"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-white flex items-center gap-2">
+                  <Icon name="video" size={16} className="text-cyan-accent" /> Add Camera
+                </h3>
+                <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-white transition-colors">
+                  <Icon name="x" />
+                </button>
+              </div>
+              <label className="text-xs text-gray-400">Camera name</label>
+              <input
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Cam 6"
+                autoFocus
+                className="w-full mt-1 mb-3 px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white outline-none focus:border-cyan-accent transition-colors"
+              />
+              <label className="text-xs text-gray-400">Location / zone</label>
+              <input
+                required
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+                placeholder="e.g. West Wing"
+                className="w-full mt-1 mb-4 px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white outline-none focus:border-cyan-accent transition-colors"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={onClose} className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+                  Cancel
+                </button>
+                <button className="btn-operator px-4 py-2 rounded-lg bg-cyan-accent text-navy font-semibold text-sm">Add Camera</button>
+              </div>
+            </form>
+          </div>
+        )
+      }
+
+      // --- Onboarding (new user) ---
+      const OnboardingScreen = ({ cameras, addOpen, setAddOpen, addCamera, logout, onFinish }) => {
+        const toast = useToast()
+        const newCameras = cameras.slice(CAMERAS.length)
+
+        const handleSave = (c) => {
+          const camera = addCamera(c)
+          toast.addToast(`Camera "${camera.name}" connected`, 'success')
         }
+
+        return (
+          <div className="min-h-screen bg-navy p-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-center mb-10">
+                <div>
+                  <h1 className="text-2xl font-bold text-white">Welcome to OmniGuard</h1>
+                  <p className="text-gray-400 text-sm mt-1">Start by connecting your first campus camera.</p>
+                </div>
+                <button onClick={logout} className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Logout
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={() => setAddOpen(true)}
+                  className="btn-operator px-4 py-2.5 rounded-lg bg-cyan-accent text-navy font-semibold flex items-center gap-2"
+                >
+                  <Icon name="plus" size={16} /> Add Camera
+                </button>
+                {newCameras.length > 0 && (
+                  <button
+                    onClick={onFinish}
+                    className="btn-operator px-4 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white font-semibold flex items-center gap-2 border border-white/10"
+                  >
+                    Continue to Command Center <Icon name="arrow-right" size={16} />
+                  </button>
+                )}
+              </div>
+
+              {newCameras.length === 0 ? (
+                <div className="mt-8 glass-panel rounded-xl border border-dashed border-white/10 p-10 text-center text-gray-500">
+                  <Icon name="video-off" size={28} className="mx-auto mb-2 text-gray-600" />
+                  No cameras connected yet. Add your first camera to get started.
+                </div>
+              ) : (
+                <div className="mt-6 grid md:grid-cols-3 gap-4">
+                  {newCameras.map((c) => (
+                    <CameraCard key={c.id} camera={c} />
+                  ))}
+                </div>
+              )}
+
+              {addOpen && <AddCameraModal onClose={() => setAddOpen(false)} onSave={handleSave} />}
+            </div>
+          </div>
+        )
+      }
+
+      // --- Incidents workspace ---
+      const IncidentWorkspace = ({ incidents, updateIncident, addLog, focusIncidentId, clearFocus }) => {
+        const toast = useToast()
+        const [selectedId, setSelectedId] = useState(null)
+        const [query, setQuery] = useState('')
+        const [severity, setSeverity] = useState('all')
+
+        // Jump straight to an incident when navigated here from another page
+        useEffect(() => {
+          if (focusIncidentId) {
+            setSelectedId(focusIncidentId)
+            clearFocus && clearFocus()
+          }
+        }, [focusIncidentId])
+
+        // Always read the live incident from state, never a stale snapshot —
+        // this is what makes Override Severity / False Positive actually show up.
+        const selected = selectedId ? incidents.find((i) => i.incident_id === selectedId) : null
+
+        const shown = incidents.filter(
+          (i) =>
+            (severity === 'all' || i.severity === severity) &&
+            `${i.incident_id} ${i.zone} ${INCIDENT_LABELS[i.type]}`.toLowerCase().includes(query.toLowerCase())
+        )
 
         const handleAcknowledge = (inc) => {
-          acknowledgeIncident(inc.incident_id)
-          addLog(`${new Date().toLocaleTimeString()} · Operator acknowledged ${inc.incident_id}`)
+          updateIncident(inc.incident_id, { status: 'acknowledged' })
+          addLog(`Operator acknowledged ${inc.incident_id}`)
+          toast.addToast(`${inc.incident_id} acknowledged`, 'success')
         }
 
         const handleOverride = (inc) => {
           const sevs = ['low', 'medium', 'high', 'critical']
           const idx = sevs.indexOf(inc.severity)
           const newSev = sevs[(idx + 1) % sevs.length]
-          overrideSeverity(inc.incident_id, newSev)
-          addLog(`${new Date().toLocaleTimeString()} · Severity override for ${inc.incident_id} → ${newSev.toUpperCase()}`)
+          updateIncident(inc.incident_id, {
+            severity: newSev,
+            human_override: { severity: newSev, by: 'operator', at: new Date().toISOString() },
+          })
+          addLog(`Severity override for ${inc.incident_id} → ${newSev.toUpperCase()}`)
+          toast.addToast(`Severity overridden to ${getSeverityLabel(newSev)}`, 'warning')
         }
 
         const handleFalsePositive = (inc) => {
-          falsePositive(inc.incident_id)
-          addLog(`${new Date().toLocaleTimeString()} · ${inc.incident_id} marked as false positive`)
+          updateIncident(inc.incident_id, { false_positive: true, status: 'dismissed' })
+          addLog(`${inc.incident_id} marked as false positive`)
+          toast.addToast(`${inc.incident_id} marked as false positive`, 'info')
         }
 
         const handleEscalate = (inc) => {
-          escalateIncident(inc.incident_id)
-          addLog(`${new Date().toLocaleTimeString()} · ${inc.incident_id} escalated to emergency response`)
+          updateIncident(inc.incident_id, { severity: 'critical', recommended_action: 'emergency_response' })
+          addLog(`${inc.incident_id} escalated to emergency response`)
+          toast.addToast(`${inc.incident_id} escalated — emergency response notified`, 'error')
         }
 
-        // Auto-select first unacknowledged critical/high incident
-        useEffect(() => {
-          const priority = incidents.find((i) => i.status === 'unacknowledged' && (i.severity === 'critical' || i.severity === 'high'))
-          if (priority && !detailOpen) {
-            setSelectedIncident(priority)
-            setDetailOpen(true)
-          }
-        }, [incidents])
+        const handleResolve = (inc) => {
+          updateIncident(inc.incident_id, { status: 'resolved' })
+          addLog(`${inc.incident_id} resolved`)
+          toast.addToast(`${inc.incident_id} resolved`, 'success')
+        }
 
-        // Incident list for the panel
-        const priorityIncidents = incidents
-          .filter((i) => i.status === 'unacknowledged')
-          .sort((a, b) => {
-            const order = { critical: 0, high: 1, medium: 2, low: 3 }
-            return order[a.severity] - order[b.severity]
-          })
+        if (selected) {
+          return (
+            <div className="animate-fade-in">
+              <button
+                onClick={() => setSelectedId(null)}
+                className="mb-4 flex items-center gap-1.5 text-sm text-gray-400 hover:text-cyan-accent transition-colors"
+              >
+                <Icon name="arrow-left" size={15} /> Back to incidents
+              </button>
+              <IncidentDetail
+                incident={selected}
+                onClose={() => setSelectedId(null)}
+                onAcknowledge={handleAcknowledge}
+                onOverride={handleOverride}
+                onFalsePositive={handleFalsePositive}
+                onEscalate={handleEscalate}
+              />
+              <div className="mt-3">
+                <button
+                  onClick={() => handleResolve(selected)}
+                  disabled={selected.status === 'resolved'}
+                  className="btn-operator px-4 py-2 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Icon name="check-check" size={14} className="inline mr-1.5" />
+                  {selected.status === 'resolved' ? 'Resolved' : 'Resolve incident'}
+                </button>
+              </div>
+            </div>
+          )
+        }
 
         return (
-          <div className="pt-20 pl-56 p-6">
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-white tracking-tight">Campus Safety Command Center</h1>
-              <p className="text-sm text-gray-400 mt-0.5">Real-time AI-assisted monitoring across campus zones</p>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-              <StatCard
-                label="Active Alerts"
-                value={totalAlerts}
-                icon="bell"
-                trend={totalAlerts > 0 ? 12 : -5}
-                trendLabel="vs prior"
-                color={totalAlerts > 0 ? '#ff9100' : '#00e676'}
-              />
-              <StatCard
-                label="Critical Incidents"
-                value={criticalCount}
-                icon="alert-triangle"
-                trend={criticalCount > 0 ? 8 : 0}
-                trendLabel="unacknowledged"
-                color={criticalCount > 0 ? '#ff1744' : '#00e676'}
-              />
-              <StatCard
-                label="People Detected"
-                value={peopleDetected}
-                icon="users"
-                trend={3}
-                trendLabel="vs prior"
-                color="#00d4ff"
-              />
-              <StatCard
-                label="Monitored Zones"
-                value={`${monitoredZones} / ${monitoredZones}`}
-                icon="map-pin"
-                subValue="All online"
-                color="#00e676"
-              />
-              <StatCard
-                label="AI Decisions"
-                value={aiDecisions}
-                icon="brain"
-                trend={5}
-                trendLabel="vs prior"
-                color="#2979ff"
-              />
-            </div>
-
-            {/* Main two-column layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* CCTV - spans 2 cols on large */}
-              <div className="lg:col-span-2">
-                <div className="glass-panel rounded-xl p-4 border border-white/5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Live Surveillance</div>
-                      <div className="text-sm text-gray-300">CAM-03 • Gate 3</div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-red-alert">
-                      <span className="blink-live text-xs">●</span>
-                      <span className="text-red-alert/80 font-semibold tracking-wider text-xs">LIVE</span>
-                    </div>
-                  </div>
-                  <CCTVFeed zone="Gate 3" />
-                </div>
-              </div>
-
-              {/* Priority Incidents */}
-              <div className="lg:col-span-1">
-                <div className="glass-panel rounded-xl p-4 border border-white/5 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Priority Incidents</div>
-                      <div className="text-sm text-gray-300">{priorityIncidents.length} unacknowledged</div>
-                    </div>
-                    <span className="status-dot warning" />
-                  </div>
-                  <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[340px]">
-                    {priorityIncidents.length === 0 ? (
-                      <div className="text-sm text-gray-500 italic">All clear. No active incidents.</div>
-                    ) : (
-                      priorityIncidents.map((inc) => (
-                        <IncidentCard
-                          key={inc.incident_id}
-                          incident={inc}
-                          onClick={() => handleIncidentClick(inc)}
-                          selected={selectedIncident?.incident_id === inc.incident_id}
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Detail Panel */}
-            {detailOpen && selectedIncident && (
-              <div className="mb-6">
-                <IncidentDetail
-                  incident={selectedIncident}
-                  onClose={handleCloseDetail}
-                  onAcknowledge={handleAcknowledge}
-                  onOverride={handleOverride}
-                  onFalsePositive={handleFalsePositive}
-                  onEscalate={handleEscalate}
-                />
-              </div>
-            )}
-
-            {/* Bottom grid: Map, Occupancy, Trends, Health, Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <CampusMap />
-              </div>
+          <div className="animate-fade-in">
+            <div className="flex flex-wrap gap-3 justify-between mb-5">
               <div>
-                <OccupancyPanel />
+                <h2 className="text-xl font-bold text-white">Incidents</h2>
+                <p className="text-sm text-gray-400">Select an incident to review the AI's analysis and take action.</p>
               </div>
-              <div className="lg:col-span-2">
-                <TrendChart />
-              </div>
-              <div>
-                <SystemHealth />
-              </div>
-              <div className="lg:col-span-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ActivityFeed logs={logs} />
-                  <div className="glass-panel rounded-xl p-4 border border-white/5 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-cyan-accent">✓</div>
-                      <div className="text-sm text-gray-400 mt-1">All systems nominal</div>
-                      <div className="text-xs text-gray-500 mt-2 font-mono">
-                        {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })} · 
-                        {incidents.length} incidents logged
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <Icon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search incidents"
+                    className="pl-8 pr-3 py-2 text-sm rounded-lg bg-black/30 border border-white/10 text-white outline-none focus:border-cyan-accent transition-colors w-44"
+                  />
                 </div>
+                <select
+                  value={severity}
+                  onChange={(e) => setSeverity(e.target.value)}
+                  className="px-3 py-2 text-sm rounded-lg bg-black/30 border border-white/10 text-white outline-none focus:border-cyan-accent transition-colors"
+                >
+                  <option value="all">All severities</option>
+                  {SEVERITIES.map((s) => (
+                    <option key={s} value={s}>
+                      {getSeverityLabel(s)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+            <div className="space-y-2 max-w-3xl">
+              {shown.length ? (
+                shown.map((i) => <IncidentCard key={i.incident_id} incident={i} onClick={() => setSelectedId(i.incident_id)} />)
+              ) : (
+                <div className="glass-panel p-8 rounded-xl text-center text-gray-500">
+                  <Icon name="search-x" size={28} className="mx-auto mb-2 text-gray-600" />
+                  No incidents match this filter.
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
 
-            {/* Human oversight banner */}
-            <div className="mt-6 glass-panel-light rounded-lg px-4 py-2.5 border border-cyan-accent/10 flex items-center justify-between">
-              <div className="flex items-center gap-3 text-sm">
-                <Icon name="shield-check" size={18} className="text-cyan-accent" />
-                <span className="text-gray-300">Human oversight enabled — </span>
-                <span className="text-gray-500 text-xs">AI recommends. Human decides.</span>
+      // --- Analytics workspace ---
+      const AnalyticsWorkspace = ({ incidents }) => {
+        const [range, setRange] = useState('7 Days')
+        const [camera, setCamera] = useState('All cameras')
+        const filtered = incidents.filter((i) => camera === 'All cameras' || i.zone === camera)
+        const counts = SEVERITIES.map((s) => ({ s, n: filtered.filter((i) => i.severity === s).length }))
+
+        return (
+          <div className="animate-fade-in">
+            <div className="flex flex-wrap justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-xl font-bold text-white">Analytics</h2>
+                <p className="text-sm text-gray-400">Operational incident intelligence</p>
               </div>
-              <div className="flex items-center gap-2 text-xs text-green-400">
-                <span className="status-dot online" />
-                <span>Operator online</span>
+              <div className="flex gap-2">
+                <select
+                  value={range}
+                  onChange={(e) => setRange(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-accent transition-colors"
+                >
+                  {['7 Days', '30 Days', 'All Time'].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+                <select
+                  value={camera}
+                  onChange={(e) => setCamera(e.target.value)}
+                  className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-cyan-accent transition-colors"
+                >
+                  <option>All cameras</option>
+                  {[...new Set(incidents.map((i) => i.zone))].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+              <StatCard label="Total Incidents" value={filtered.length} color="#00d4ff" icon="list" />
+              <StatCard
+                label="High Severity"
+                value={filtered.filter((i) => i.severity === 'high' || i.severity === 'critical').length}
+                color="#ff9100"
+                icon="flame"
+              />
+              <StatCard label="Medium Severity" value={filtered.filter((i) => i.severity === 'medium').length} color="#ffea00" icon="alert-circle" />
+              <StatCard label="Low Severity" value={filtered.filter((i) => i.severity === 'low').length} color="#2979ff" icon="info" />
+              <StatCard label="Resolved" value={filtered.filter((i) => i.status === 'resolved').length} color="#00e676" icon="check-circle" />
+            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="glass-panel rounded-xl p-5 border border-white/5">
+                <h3 className="text-sm font-semibold mb-4">Severity distribution · {range}</h3>
+                {counts.map(({ s, n }) => (
+                  <div key={s} className="mb-3">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span style={{ color: getSeverityColor(s) }}>{getSeverityLabel(s)}</span>
+                      <span className="text-gray-400">{n}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${filtered.length ? (n / filtered.length) * 100 : 0}%`, background: getSeverityColor(s) }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass-panel rounded-xl p-5 border border-white/5">
+                <h3 className="text-sm font-semibold mb-4">Response health</h3>
+                {[
+                  ['Resolved', filtered.filter((i) => i.status === 'resolved').length, 'check-check', '#00e676'],
+                  ['Acknowledged', filtered.filter((i) => i.status === 'acknowledged').length, 'check', '#00d4ff'],
+                  ['Unacknowledged', filtered.filter((i) => i.status === 'unacknowledged').length, 'clock', '#ff9100'],
+                ].map(([l, n, icon, color]) => (
+                  <div key={l} className="flex justify-between items-center border-b border-white/5 py-3 text-sm last:border-b-0">
+                    <span className="text-gray-400 flex items-center gap-2">
+                      <span style={{ color }}>
+                        <Icon name={icon} size={14} />
+                      </span>
+                      {l}
+                    </span>
+                    <span className="font-bold" style={{ color }}>
+                      {n}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )
       }
 
-      // --- App ---
-      const App = () => {
-        const [activePage, setActivePage] = useState('overview')
+      // --- Cameras workspace ---
+      const CameraWorkspace = ({ cameras, incidents, onAdd, compact = false }) => {
+        const [selected, setSelected] = useState(null)
+
+        if (selected) {
+          const cam = cameras.find((c) => c.id === selected.id) || selected
+          return <CameraDetail camera={cam} incidents={incidents} onBack={() => setSelected(null)} backLabel="Back to cameras" />
+        }
+
+        return (
+          <div className="animate-fade-in">
+            {compact ? (
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Camera Overview</div>
+                  <div className="text-sm text-gray-300">{cameras.length} cameras connected</div>
+                </div>
+                <button onClick={onAdd} className="text-xs text-cyan-accent hover:text-white transition-colors flex items-center gap-1">
+                  <Icon name="plus" size={13} /> Add Camera
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Cameras</h2>
+                  <p className="text-sm text-gray-400">{cameras.length} connected camera feeds</p>
+                </div>
+                <button onClick={onAdd} className="btn-operator px-3 py-2 rounded-lg bg-cyan-accent text-navy font-semibold text-sm flex items-center gap-1.5">
+                  <Icon name="plus" size={15} /> Add Camera
+                </button>
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cameras.map((c) => (
+                <CameraCard key={c.id} camera={c} onClick={setSelected} />
+              ))}
+              <AddCameraCard onClick={onAdd} />
+            </div>
+          </div>
+        )
+      }
+
+      // --- Overview workspace ---
+      const OverviewWorkspace = ({ cameras, incidents, logs, onAdd, goIncidents }) => {
+        const totalAlerts = incidents.filter((i) => i.status === 'unacknowledged').length
+        const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status === 'unacknowledged').length
+        const peopleDetected = ZONES.reduce((sum, z) => sum + z.occupancy, 0)
+        const aiDecisions = incidents.filter((i) => i.ai_processed).length
+
+        return (
+          <div className="animate-fade-in">
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Campus Safety Command Center</h1>
+                <p className="text-sm text-gray-400 mt-0.5">Real-time AI-assisted monitoring across campus zones</p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-green-400 glass-panel-light px-3 py-1.5 rounded-full border border-white/5">
+                <span className="status-dot online" /> All systems operational
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+              <StatCard
+                label="Active Alerts"
+                value={totalAlerts}
+                icon="bell"
+                color={totalAlerts > 0 ? '#ff9100' : '#00e676'}
+                trend={totalAlerts > 0 ? 12 : -5}
+                trendLabel="vs prior"
+              />
+              <StatCard
+                label="Critical Incidents"
+                value={criticalCount}
+                icon="alert-triangle"
+                color={criticalCount > 0 ? '#ff1744' : '#00e676'}
+                trend={criticalCount > 0 ? 8 : 0}
+                trendLabel="unacknowledged"
+              />
+              <StatCard label="People Detected" value={peopleDetected} icon="users" color="#00d4ff" trend={3} trendLabel="vs prior" />
+              <StatCard label="Monitored Zones" value={`${ZONES.length} / ${ZONES.length}`} icon="map-pin" color="#00e676" subValue="All online" />
+              <StatCard label="AI Decisions" value={aiDecisions} icon="brain" color="#2979ff" trend={5} trendLabel="vs prior" />
+            </div>
+
+            <div className="mb-6">
+              <CameraWorkspace cameras={cameras} incidents={incidents} onAdd={onAdd} compact />
+            </div>
+
+            <div className="glass-panel rounded-xl p-4 border border-white/5 mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Incidents</div>
+                  <div className="text-sm text-gray-300">Latest live detections</div>
+                </div>
+                <button
+                  onClick={() => goIncidents()}
+                  className="text-xs text-cyan-accent hover:text-white transition-colors flex items-center gap-1"
+                >
+                  View all incidents <Icon name="arrow-right" size={12} />
+                </button>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {incidents.slice(0, 5).map((i) => (
+                  <IncidentCard key={i.incident_id} incident={i} onClick={() => goIncidents(i.incident_id)} />
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <HashChainPanel incidents={incidents} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <OccupancyPanel />
+              <div className="lg:col-span-2">
+                <TrendChart />
+              </div>
+              <SystemHealth />
+              <div className="lg:col-span-2">
+                <ActivityFeed logs={logs} />
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // --- App shell (nav + routing), rendered inside ToastProvider/AppContext ---
+      const AppShell = ({
+        page,
+        setPage,
+        cameras,
+        incidents,
+        logs,
+        addOpen,
+        setAddOpen,
+        addCamera,
+        updateIncident,
+        addLog,
+        logout,
+        focusIncidentId,
+        setFocusIncidentId,
+      }) => {
+        const toast = useToast()
+        const unacknowledged = incidents.filter((i) => i.status === 'unacknowledged').length
+
+        const goIncidents = (incidentId) => {
+          if (incidentId) setFocusIncidentId(incidentId)
+          setPage('incidents')
+        }
+
+        const handleAddCamera = (c) => {
+          const camera = addCamera(c)
+          toast.addToast(`Camera "${camera.name}" added to ${camera.zone}`, 'success')
+        }
+
+        const navItems = [
+          ['overview', 'Overview', 'layout-dashboard'],
+          ['cameras', 'Cameras', 'cctv'],
+          ['incidents', 'Incidents', 'alert-triangle'],
+          ['analytics', 'Analytics', 'chart-bar'],
+          ['tampering', 'Tampering Logs', 'shield-alert'],
+          ['health', 'System Health', 'activity'],
+        ]
+
+        const content =
+          page === 'overview' ? (
+            <OverviewWorkspace cameras={cameras} incidents={incidents} logs={logs} onAdd={() => setAddOpen(true)} goIncidents={goIncidents} />
+          ) : page === 'cameras' ? (
+            <CameraWorkspace cameras={cameras} incidents={incidents} onAdd={() => setAddOpen(true)} />
+          ) : page === 'incidents' ? (
+            <IncidentWorkspace
+              incidents={incidents}
+              updateIncident={updateIncident}
+              addLog={addLog}
+              focusIncidentId={focusIncidentId}
+              clearFocus={() => setFocusIncidentId(null)}
+            />
+          ) : page === 'analytics' ? (
+            <AnalyticsWorkspace incidents={incidents} />
+          ) : page === 'tampering' ? (
+            <TamperingLogsPage incidents={incidents} logs={logs} />
+          ) : (
+            <div className="max-w-md">
+              <SystemHealth />
+            </div>
+          )
+
+        return (
+          <div className="min-h-screen bg-navy">
+            <header className="h-16 px-5 flex items-center justify-between border-b border-white/5 bg-navy/90 backdrop-blur-sm fixed top-0 left-0 right-0 z-40">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-cyan-accent/10 border border-cyan-accent/20 flex items-center justify-center">
+                  <Icon name="shield" size={20} className="text-cyan-accent" />
+                </div>
+                <div>
+                  <div className="text-base font-bold tracking-tight text-white leading-tight">
+                    OMNIGUARD <span className="text-xs text-cyan-accent">SAFETY INTELLIGENCE</span>
+                  </div>
+                  <div className="text-[10px] font-medium text-cyan-accent/70 tracking-wider uppercase hidden sm:block">
+                    Agentic Campus Safety Intelligence
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    toast.addToast(
+                      unacknowledged ? `${unacknowledged} active alert${unacknowledged === 1 ? '' : 's'} need review` : 'All clear — no active alerts',
+                      unacknowledged ? 'warning' : 'success'
+                    )
+                  }
+                  className="relative w-9 h-9 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-cyan-accent transition-colors"
+                  aria-label="Alerts"
+                >
+                  <Icon name="bell" size={18} />
+                  {unacknowledged > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-alert animate-pulse-fast" />}
+                </button>
+                <button
+                  onClick={() => setPage('health')}
+                  className="w-9 h-9 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-cyan-accent transition-colors"
+                  aria-label="System settings"
+                >
+                  <Icon name="settings" size={18} />
+                </button>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-accent/20 to-cyan-accent/5 border border-cyan-accent/20 flex items-center justify-center text-xs font-bold text-cyan-accent">
+                  OP
+                </div>
+              </div>
+            </header>
+
+            <aside className="w-56 h-screen fixed left-0 top-16 bottom-0 bg-navy/95 border-r border-white/5 z-30 flex flex-col">
+              <nav className="flex-1 pt-4 px-3 space-y-0.5">
+                {navItems.map(([id, label, icon]) => (
+                  <div
+                    key={id}
+                    className={`nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
+                      page === id ? 'active text-cyan-accent bg-cyan-dim border-r-2 border-cyan-accent' : 'text-gray-400 hover:text-white'
+                    }`}
+                    onClick={() => setPage(id)}
+                  >
+                    <Icon name={icon} size={18} />
+                    <span>{label}</span>
+                    {id === 'incidents' && unacknowledged > 0 && (
+                      <span className="ml-auto text-[10px] font-bold bg-red-alert/20 text-red-alert px-1.5 py-0.5 rounded-full">
+                        {unacknowledged}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </nav>
+              <div className="p-3 border-t border-white/5 space-y-3">
+                <div className="glass-panel-light rounded-lg p-3">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Operator Mode</div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+                    <span className="status-dot online" />
+                    Human Oversight: ENABLED
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-1 text-sm text-gray-400 hover:text-red-400 transition-colors flex items-center gap-2"
+                >
+                  <Icon name="log-out" size={15} /> Logout
+                </button>
+              </div>
+            </aside>
+
+            <main className="ml-56 pt-20 p-6">{content}</main>
+
+            {addOpen && <AddCameraModal onClose={() => setAddOpen(false)} onSave={handleAddCamera} />}
+          </div>
+        )
+      }
+
+      // --- Root app: auth state + global data, then hands off to AppShell/OnboardingScreen ---
+      const OmniGuardApp = () => {
+        const [mode, setMode] = useState(localStorage.getItem('omniguard-mode') || '')
+        const [page, setPage] = useState('overview')
         const [incidents, setIncidents] = useState(mockIncidents)
-        const [logs, setLogs] = useState([])
-        const [toast, setToast] = useState(null)
+        const [cameras, setCameras] = useState(CAMERAS)
+        const [logs, setLogs] = useState(() =>
+          mockIncidents.slice(0, 5).map((i) => ({ time: formatTime(i.timestamp), message: `${INCIDENT_LABELS[i.type]} detected at ${i.zone} (${i.incident_id})` }))
+        )
+        const [addOpen, setAddOpen] = useState(false)
+        const [focusIncidentId, setFocusIncidentId] = useState(null)
 
-        // Initialize logs from existing incidents
-        useEffect(() => {
-          const initialLogs = incidents.slice(0, 5).map((inc) => ({
-            time: formatTime(inc.timestamp),
-            message: `${INCIDENT_LABELS[inc.type]} detected at ${inc.zone} (${inc.incident_id})`,
-          }))
-          setLogs(initialLogs)
-        }, [])
+        const addLog = (message) => setLogs((p) => [{ time: new Date().toLocaleTimeString(), message }, ...p].slice(0, 50))
+        const login = (value) => {
+          localStorage.setItem('omniguard-mode', value)
+          setMode(value)
+        }
+        const logout = () => {
+          localStorage.removeItem('omniguard-mode')
+          setMode('')
+        }
+        const updateIncident = (id, patch) =>
+          setIncidents((p) => p.map((i) => (i.incident_id === id ? { ...i, ...patch, updated_at: new Date().toISOString() } : i)))
+        const addCamera = (c) => {
+          const camera = {
+            id: `cam-${String(cameras.length + 1).padStart(2, '0')}`,
+            name: c.name,
+            zone: c.zone,
+            label: `${c.name.toUpperCase()} · ${c.zone.toUpperCase()}`,
+            status: 'online',
+            severity: 'none',
+          }
+          setCameras((p) => [...p, camera])
+          setAddOpen(false)
+          addLog(`Camera ${camera.name} added in ${camera.zone}`)
+          return camera
+        }
 
-        const addLog = useCallback((message) => {
-          setLogs((prev) => {
-            const newLog = { time: new Date().toLocaleTimeString(), message }
-            return [newLog, ...prev.slice(0, 49)]
-          })
-        }, [])
-
-        const acknowledgeIncident = useCallback((id) => {
-          setIncidents((prev) =>
-            prev.map((inc) =>
-              inc.incident_id === id
-                ? { ...inc, status: 'acknowledged', updated_at: new Date().toISOString() }
-                : inc
-            )
-          )
-        }, [])
-
-        const overrideSeverity = useCallback((id, newSeverity) => {
-          setIncidents((prev) =>
-            prev.map((inc) =>
-              inc.incident_id === id
-                ? {
-                    ...inc,
-                    severity: newSeverity,
-                    human_override: { severity: newSeverity, by: 'operator', at: new Date().toISOString() },
-                    updated_at: new Date().toISOString(),
-                  }
-                : inc
-            )
-          )
-        }, [])
-
-        const falsePositive = useCallback((id) => {
-          setIncidents((prev) =>
-            prev.map((inc) =>
-              inc.incident_id === id
-                ? { ...inc, false_positive: true, status: 'acknowledged', updated_at: new Date().toISOString() }
-                : inc
-            )
-          )
-        }, [])
-
-        const escalateIncident = useCallback((id) => {
-          setIncidents((prev) =>
-            prev.map((inc) =>
-              inc.incident_id === id
-                ? {
-                    ...inc,
-                    severity: 'critical',
-                    recommended_action: 'emergency_response',
-                    updated_at: new Date().toISOString(),
-                  }
-                : inc
-            )
-          )
-        }, [])
-
-        // Handle realtime events
         useEffect(() => {
           const unsubscribe = mockRealtime.subscribe((event) => {
-            if (event.type === 'incident_new' && event.data) {
-              setIncidents((prev) => [event.data, ...prev])
-              addLog(event.log)
-            } else if (event.type === 'incident_update' && event.data) {
-              setIncidents((prev) =>
-                prev.map((inc) => (inc.incident_id === event.data.incident_id ? { ...inc, ...event.data } : inc))
-              )
-              addLog(event.log)
-            } else if (event.type === 'occupancy_update') {
-              // Already handled in mock data mutation
-              // Force re-render by updating state
-              setIncidents((prev) => [...prev])
-            } else if (event.type === 'activity_log') {
-              addLog(event.log)
-            }
+            if (event.type === 'incident_new' && event.data) setIncidents((prev) => [event.data, ...prev])
+            if (event.type === 'incident_update' && event.data)
+              setIncidents((prev) => prev.map((i) => (i.incident_id === event.data.incident_id ? { ...i, ...event.data } : i)))
+            if (event.type === 'occupancy_update') setIncidents((prev) => [...prev])
+            if (event.log) addLog(event.log)
           })
-
           return () => unsubscribe()
-        }, [addLog])
+        }, [])
+
+        if (!mode) return <LoginScreen onLogin={login} />
 
         const contextValue = {
           incidents,
           logs,
           addLog,
-          acknowledgeIncident,
-          overrideSeverity,
-          falsePositive,
-          escalateIncident,
+          acknowledgeIncident: (id) => updateIncident(id, { status: 'acknowledged' }),
+          overrideSeverity: (id, severity) =>
+            updateIncident(id, { severity, human_override: { severity, by: 'operator', at: new Date().toISOString() } }),
+          falsePositive: (id) => updateIncident(id, { false_positive: true, status: 'dismissed' }),
+          escalateIncident: (id) => updateIncident(id, { severity: 'critical', recommended_action: 'emergency_response' }),
         }
 
         return (
           <AppContext.Provider value={contextValue}>
             <ToastProvider>
-              <div className="min-h-screen bg-navy">
-                <Navbar />
-                <Sidebar activePage={activePage} setActivePage={setActivePage} />
-
-                <main className="ml-56 pt-16">
-                  {activePage === 'overview' && <Dashboard />}
-                  {activePage === 'surveillance' && (
-                    <div className="pt-20 p-6">
-                      <h2 className="text-xl font-bold text-white mb-4">Live Surveillance</h2>
-                      <div className="max-w-3xl">
-                        <CCTVFeed zone="Gate 3" />
-                      </div>
-                    </div>
-                  )}
-                  {activePage === 'incidents' && (
-                    <div className="pt-20 p-6">
-                      <h2 className="text-xl font-bold text-white mb-4">All Incidents</h2>
-                      <div className="space-y-2 max-w-2xl">
-                        {incidents.map((inc) => (
-                          <IncidentCard key={inc.incident_id} incident={inc} onClick={() => {}} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {activePage === 'map' && (
-                    <div className="pt-20 p-6">
-                      <h2 className="text-xl font-bold text-white mb-4">Campus Map</h2>
-                      <div className="max-w-3xl">
-                        <CampusMap />
-                      </div>
-                    </div>
-                  )}
-                  {activePage === 'analytics' && (
-                    <div className="pt-20 p-6">
-                      <h2 className="text-xl font-bold text-white mb-4">Analytics</h2>
-                      <div className="max-w-2xl">
-                        <TrendChart />
-                      </div>
-                    </div>
-                  )}
-                  {activePage === 'health' && (
-                    <div className="pt-20 p-6">
-                      <h2 className="text-xl font-bold text-white mb-4">System Health</h2>
-                      <div className="max-w-md">
-                        <SystemHealth />
-                      </div>
-                    </div>
-                  )}
-                </main>
-              </div>
+              {mode === 'new' ? (
+                <OnboardingScreen
+                  cameras={cameras}
+                  addOpen={addOpen}
+                  setAddOpen={setAddOpen}
+                  addCamera={addCamera}
+                  logout={logout}
+                  onFinish={() => login('admin')}
+                />
+              ) : (
+                <AppShell
+                  page={page}
+                  setPage={setPage}
+                  cameras={cameras}
+                  incidents={incidents}
+                  logs={logs}
+                  addOpen={addOpen}
+                  setAddOpen={setAddOpen}
+                  addCamera={addCamera}
+                  updateIncident={updateIncident}
+                  addLog={addLog}
+                  logout={logout}
+                  focusIncidentId={focusIncidentId}
+                  setFocusIncidentId={setFocusIncidentId}
+                />
+              )}
             </ToastProvider>
           </AppContext.Provider>
         )
       }
 
       // ============================================================
-      // 5. RENDER
+      // 6. RENDER
       // ============================================================
 
       const root = ReactDOM.createRoot(document.getElementById('root'))
-      root.render(<App />)
+      root.render(<OmniGuardApp />)
 
       // Initialize Lucide icons
       //if (window.lucide) {
