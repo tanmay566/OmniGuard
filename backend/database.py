@@ -1,8 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.pool import StaticPool
-from .config import DATABASE_URL
-from .models import Base
+
+try:
+    from config import DATABASE_URL
+except ImportError:
+    from .config import DATABASE_URL
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 #engine start
@@ -41,3 +48,6 @@ async def init_db():
 async def close_db():
     engine.dispose() #on shutdown
     print("✓ Database connection closed")
+
+
+from models import Incident, ZoneOccupancyRecord  # noqa: E402

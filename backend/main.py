@@ -78,6 +78,7 @@ app.add_middleware (
 #frontend serving
 FRONTEND_CANDIDATES = [
     Path(__file__).parent /" index.html",
+    Path(__file__).parent.parent / "frontend" / "index.html",
     Path(__file__).parent.parent /"index.html",
     Path.cwd() / "index.html",
 ]
@@ -97,10 +98,10 @@ def serve_frontend():
     <!doctype html>
     <html>
       <head>
-        <title>Omni Guard API</title>
+        <title>OmniGuard API</title>
       </head>
       <body style="font-family: Arial, sans-serif; padding: 24px;">
-        <h1>Campus Sentinel API is running</h1>
+        <h1>OmniGuard API is running</h1>
         <p>Frontend HTML file not found.</p>
         <p>Useful links:</p>
         <ul>
@@ -321,9 +322,6 @@ def get_incident_or_404(db: Session, incident_id: str) -> Incident:
         .first()
     )
 
-    if not incident and incident_id.isdigit():
-        incident = db.query(Incident).filter(Incident.id == int(incident_id)).first()
-
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 
@@ -506,14 +504,14 @@ async def process_incident_payload(
 
         incident.timestamp = payload.timestamp
         if payload.dwell_time_seconds is not None:
-            incident.dwell_time-seconds = payload.dwell_time_seconds
+            incident.dwell_time_seconds = payload.dwell_time_seconds
 
         if payload.detection_confidence is not None:
             incident.detection_confidence = payload.detection_confidence
         if payload.count is not None:
             incident.count = payload.count
 
-        incident.updated-at = db_now()
+        incident.updated_at = db_now()
 
         if incident.severity:
             return await save_and_broadcast_incident(
@@ -751,7 +749,7 @@ def get_stats(db: Session) -> dict:
     )
 
     status_rows = (
-        db.query(Incident.status, func.count(Incident.id))
+        db.query(Incident.status, func.count(Incident.incident_id))
         .group_by(Incident.status)
         .all()
     )
@@ -823,7 +821,7 @@ def get_activity_feed(db: Session, limit: int = 30) -> List[dict]:
 
         items.append(
             {
-                "id": incident.id,
+                "id": incident.incident_id,
                 "incident_id": incident.incident_id,
                 "type": "incident",
                 "event": incident.type,
@@ -922,7 +920,7 @@ async def handle_websocket(websocket: WebSocket):
             }
         )
         while True:
-            data = await websocket.recieve_text()
+            data = await websocket.receive_text()
 
             if data.lower() == "ping":
                 await websocket.send_json(
