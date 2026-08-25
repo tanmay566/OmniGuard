@@ -11,7 +11,10 @@ except ImportError:
 class Base(DeclarativeBase):
     pass
 
-
+try:
+    from models import Incident, ZoneOccupancyRecord  # noqa: E402
+except ImportError:
+    from .models import Incident, ZoneOccupancyRecord  # noqa: E402
 # Import models after Base is defined to avoid circular imports
 from backend.models import Incident, ZoneOccupancyRecord  # noqa: E402
 

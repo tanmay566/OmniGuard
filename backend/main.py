@@ -26,9 +26,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.agent import run_triage_agent
-from backend.database import Base, Incident, ZoneOccupancyRecord, engine, get_db
-from backend.schemas import (
+from agent import run_triage_agent
+from database import Base, Incident, ZoneOccupancyRecord, engine, get_db
+from schemas import (
     AckRequest,
     FalsePositiveRequest,
     IncidentIn,
@@ -211,7 +211,7 @@ def _incident_to_out(incident: Incident) -> IncidentOut:
         timestamp=incident.timestamp,
         created_at=incident.created_at,
         updated_at=incident.updated_at,
-        notes=incident.notes,
+        
     )
 
 @app.post("/incidents", response_model=IncidentOut)
@@ -220,14 +220,14 @@ async def create_incident(payload: IncidentIn, db: Session = Depends(get_db)):
         incident_id=payload.incident_id,
         type=payload.type,
         zone=payload.zone,
-        severity=payload.severity,
+        severity=None,
         status="new",
         tracked_object_id=payload.tracked_object_id,
         detection_confidence=payload.detection_confidence,
         dwell_time_seconds=payload.dwell_time_seconds,
         count=payload.count,
         timestamp=payload.timestamp,
-        notes=payload.notes,
+        
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -244,7 +244,7 @@ async def create_incident(payload: IncidentIn, db: Session = Depends(get_db)):
 
     if agent_output is not None:
         incident.severity = agent_output.severity
-        incident.notes = agent_output.notification_draft
+        
         db.commit()
 
     await manager.broadcast({
@@ -339,17 +339,15 @@ async def list_zones() -> Dict[str, Dict[str, Any]]:
     return ZONE_CONFIG
 
 @app.get("/occupancy", response_model=List[ZoneOccupancyOut])
-async def get_occupancy(
-    db: Session = Depends(get_db),
-    limit: int = Query(20, ge=1, le=200),
-):
+async def get_occupancy(db: Session = Depends(get_db), limit: int = Query(20, ge=1, le=200)):
     rows = (
         db.query(ZoneOccupancyRecord)
-        .order_by(ZoneOccupancyRecord.created_at.desc())
+        .order_by(ZoneOccupancyRecord.updated_at.desc())  # ✅ Changed from created_at
         .limit(limit)
         .all()
     )
-    return [ZoneOccupancyOut.model_validate(row.to_dict()) for row in rows]
+    # ✅ Removed .to_dict(), Pydantic V2 handles it via from_attributes=True
+    return [ZoneOccupancyOut.model_validate(row) for row in rows]
 
 @app.post("/occupancy")
 async def create_occupancy(payload: ZoneOccupancy, db: Session = Depends(get_db)):
@@ -357,14 +355,22 @@ async def create_occupancy(payload: ZoneOccupancy, db: Session = Depends(get_db)
         zone=payload.zone,
         current_count=payload.current_count,
         capacity=payload.capacity,
-        created_at=datetime.now(timezone.utc),
+        occupancy_percentage=payload.occupancy_percentage, # ✅ Added
+        timestamp=payload.timestamp, # ✅ Added
+        trend=payload.trend, # ✅ Added
+        updated_at=datetime.now(timezone.utc), # ✅ Changed from created_at
     )
     db.add(record)
     db.commit()
     db.refresh(record)
+    
     await manager.broadcast({
         "event": "occupancy_update",
         "zone": payload.zone,
-        "record": record.to_dict(),
+        "record": ZoneOccupancyOut.model_validate(record).model_dump(), # ✅ Fixed to_dict()
     })
     return {"status": "ok"}
+if __name__ == "__main__":
+    import uvicorn
+    # This actually starts the localhost server on port 8000
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

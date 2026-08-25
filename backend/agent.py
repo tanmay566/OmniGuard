@@ -183,14 +183,14 @@ def get_zone_context(zone: str) -> Dict[str, Any]:
         occupancy = (
             db.query(ZoneOccupancyRecord)
             .filter(ZoneOccupancyRecord.zone == zone)
-            .order_by(ZoneOccupancyRecord.created_at.desc())
+            .order_by(ZoneOccupancyRecord.updated_at.desc()) # ✅ Changed from created_at
             .first()
         )
-        incidents = get_recent_incidents(zone=zone, minutes=60, limit=10)
+        # ...
         return {
             "zone": zone,
             "static_context": zone_info,
-            "latest_occupancy": occupancy.to_dict() if occupancy else None,
+            "latest_occupancy": occupancy if occupancy else None, # ✅ Removed .to_dict()
             "recent_incidents": incidents,
         }
     finally:
