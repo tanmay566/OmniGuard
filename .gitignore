@@ -1,2 +1,17 @@
-.env
-.db
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py~
+
+# Database
+campus_safety.db
+
+# Dependencies
+node_modules/
+
+# Package manager
+package-lock.json
+```

@@ -12,6 +12,10 @@ class Base(DeclarativeBase):
     pass
 
 
+# Import models after Base is defined to avoid circular imports
+from backend.models import Incident, ZoneOccupancyRecord  # noqa: E402
+
+
 #engine start
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
@@ -48,6 +52,3 @@ async def init_db():
 async def close_db():
     engine.dispose() #on shutdown
     print("✓ Database connection closed")
-
-
-from models import Incident, ZoneOccupancyRecord  # noqa: E402
