@@ -4,7 +4,10 @@ from typing import Optional
 from sqlalchemy import String, Integer, Float, DateTime, JSON, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database import Base
+try:
+    from backend.database import Base
+except ImportError:
+    from database import Base
 
 
 class Incident(Base):
